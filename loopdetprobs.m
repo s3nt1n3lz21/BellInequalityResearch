@@ -1,4 +1,4 @@
-function [smax,varsgivesmax,amountofvarsgivesmax] = loopdetprobs(varstoloop,vars,coefflist,n,d,m)
+function [smax,varsgivesmax,amountofvarsgivesmax] = loopdetprobs(varstoloop,detprobs,coefflist,n,d,m)
 % LOOPDETPROBS Loop over all the possible values of the single party deterministic probability distributions (deterministic strategies) and calculate the value of the bell inequality through recursion
 
 % smax is the current branch's maximum value of the expression so far
@@ -11,9 +11,9 @@ function [smax,varsgivesmax,amountofvarsgivesmax] = loopdetprobs(varstoloop,vars
     if varstoloop >= 1
     % if there is still a variable to loop over, loop over it's possible values (0 or 1)            
          for value = 0:1
-            vars(varstoloop) = value;
+            detprobs(varstoloop) = value;
             % then loop over the rest by calling the function again, giving it the current values of the variables (var)          
-            [innersmax,innervarsgivesmax,inneramountofvarsgivesmax] = loopdetprobs(varstoloop-1,vars,coefflist,n,d,m);
+            [innersmax,innervarsgivesmax,inneramountofvarsgivesmax] = loopdetprobs(varstoloop-1,detprobs,coefflist,n,d,m);
             if smax == 'x'
                 if innersmax == 'x'
                     % do nothing
@@ -64,7 +64,7 @@ function [smax,varsgivesmax,amountofvarsgivesmax] = loopdetprobs(varstoloop,vars
                         % check that the constaints are obeyed                        
                         constraintexpression = 0;
                         for di = 1:d
-                            constraintexpression = constraintexpression + vars(f(ni,di,mi,d,m));
+                            constraintexpression = constraintexpression + detprobs(getdetprobindex(ni,di,mi,d,m));
                         end
                         if not(constraintexpression == 1)
                             constraintsobeyed = false;
@@ -90,11 +90,11 @@ function [smax,varsgivesmax,amountofvarsgivesmax] = loopdetprobs(varstoloop,vars
                     % create an array to hold these values as they change                    
                     darray = zeros(1,n);
                     % now calculate the correlator of measurements e.g m1 and m2 by looping with recursion                    
-                    finalcurrentcorr = calcinnercorr(numdvars,marray,darray,vars,d,m,partiesmakemeasurements);                
+                    finalcurrentcorr = calccorr(numdvars,marray,darray,detprobs,d,m,partiesmakemeasurements);                
                     smax = smax + coeff*finalcurrentcorr;
                 end
             end
-            varsgivesmax(1,:) = vars;
+            varsgivesmax(1,:) = detprobs;
             amountofvarsgivesmax = 1;
         else
         % if constaints not obeyed make s a character 'x' to say there isn't a value for s yet (NaN always returns false in conditional statements)       
