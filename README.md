@@ -14,3 +14,4 @@ Include validation of calcclassicalbound (size of coefflist)
 Some method of including only one copy of the constants n,m and d and other parameters so there are not many copies in memory
 Set up Git so i don't have to put in the password every time
 Generalise to any number of measurements and outcomes for each party
+Generalise the calculation of tensor products of projectors to a state of d qubits. (Create a function)
