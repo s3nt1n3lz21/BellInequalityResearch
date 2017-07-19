@@ -18,8 +18,12 @@ end
 
 % create an array of all the possible tensor products of these projectors
 % and their decomposition into the basis.
-tensorprojs = zeros(8,8,64);
-vectensorprojs(:
+
+n = 3;
+d = 2;
+m = 3;
+tensorprojs = zeros(2^n,2^n,6^n);
+vectensorprojs = zeros((m+1)^n,6^n);
 ind = 1;
 for i1 = 1:6
     for i2 = 1:6
@@ -32,17 +36,17 @@ for i1 = 1:6
 end
 
 states = importdata('Three_qubit_hierarchy.mat');
-
-for row = 1:size(states,1)
-    ketstate = states(row,:).'
-    b=rhodecomp(ketstate * ketstate').'
-    lb = length(b)
-    n=size(tensorprojs,3);
-    A=vectensorprojs
-    sizeA = size(A)
+numrows = size(states,1);
+ymatrix = zeros(numrows,(m+1)^n);
+for row = 1:1
+    ketstate = states(row,:).';
+    b = rhodecomp(ketstate * ketstate').';
+    numelx = size(tensorprojs,3);
+    A = vectensorprojs;
+    t1 = clock;
     
     cvx_begin 
-        variable x(n)
+        variable x(numelx)
         dual variable y;
         minimize( norm( x, 1 ) )
         subject to
@@ -50,5 +54,13 @@ for row = 1:size(states,1)
     cvx_end
     robustness=cvx_optval;
     
-    y
+    ymatrix(row,:) = y.';
+    y.'
+    [dimension,smax] = calcdimandclassicalbound(n,d,m,ymatrix(row,:))
+    
+    t2 = clock;
+    numsecs = etime(t2,t1)
+    timeleft = (numrows-rows)*numsecs
+    
 end
+
