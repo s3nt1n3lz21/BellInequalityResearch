@@ -15,3 +15,5 @@ Some method of including only one copy of the constants n,m and d and other para
 Set up Git so i don't have to put in the password every time
 Generalise to any number of measurements and outcomes for each party
 Generalise the calculation of tensor products of projectors to a state of d qubits. (Create a function)
+Returns s = 0 if corrcoefflist is all zeros
+Create a method to clear the values up to the nuber of rows it is full, don't use the zeros function to reset the whole array of zeros when most of them already are zero.
