@@ -60,7 +60,7 @@ for row = 1:1
     
     t2 = clock;
     numsecs = etime(t2,t1)
-    timeleft = (numrows-rows)*numsecs
+    timeleft = (numrows-row)*numsecs
     
 end
 
