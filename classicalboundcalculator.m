@@ -1,4 +1,4 @@
-classdef classicalboundcalculator
+classdef classicalboundcalculator < handle
    properties
       % The number of parties, measurement outcomes and measurement settings       
       n
@@ -39,7 +39,7 @@ classdef classicalboundcalculator
          obj.m = m;
          obj.numvars = n*m*d;
          obj.corrcoefflist = corrcoefflist;
-         obj.detprobvalues = zeros(obj.numvars);
+         obj.detprobvalues = zeros(1,obj.numvars);
          obj.detprobsgivesmax = zeros(obj.maxdim,n*m*d);
          obj.detprobsrows = 0;
          obj.smax = 'x';
@@ -109,14 +109,14 @@ classdef classicalboundcalculator
                         currentsmax = currentsmax + coeff*currentcorr;
                     end
                 end
-                if obj.detprobsrows+1 > size(obj.detprobsgivesmax,1)
-                  % If the index has gone out of bounds then we know that the current value of smax cannot be the correct one so reset the array
-                   obj.detprobsgivesmax = zeros(obj.maxdim,obj.numvars);
-                   obj.detprobsrows = 0;
-                end
+%                 if obj.detprobsrows+1 > obj.maxdim
+%                   % If the index has gone out of bounds then we know that the current value of smax cannot be the correct one so reset the array
+%                    obj.detprobsgivesmax = zeros(obj.maxdim,obj.numvars);
+%                    obj.detprobsrows = 0;
+%                 end
                 if obj.smax == 'x'
                   % if smax not yet defined then set the value of smax and array of deterministic probabilities that give smax                    
-                  obj.smax = currentsmax;
+                  obj.smax = currentsmax
                   obj.detprobsgivesmax(obj.detprobsrows+1,:) = obj.detprobvalues;
                   obj.detprobsrows = obj.detprobsrows + 1;
                 else
@@ -156,27 +156,25 @@ classdef classicalboundcalculator
            curprodterm = 1;
            % the expression will take the form of k products if there are k parties that make measurements        
            for party = obj.pmm
-               curprodterm = curprodterm*obj.detprobs(obj.getdetprobindex(obj,party,darray(party),marray(party)));
+               curprodterm = curprodterm*obj.detprobvalues(getdetprobindex(obj,party,obj.dvalues(party),obj.mvalues(party)));
            end
            % also multiply by the prefactor        
            curprodterm = curprodterm*((-1)^(sum(obj.dvalues)));
            % Add this value to the array corrvalues and keep track how full the array is  
-           obj.corrvalues(obj.corrvaluesrow+1) = curprodterm;
-           obj.corrvaluesrow = obj.corrvaluesrow + 1;
+           obj.corrvalues(obj.corrvaluesrows+1) = curprodterm;
+           obj.corrvaluesrows = obj.corrvaluesrows + 1;
        end
       end
       function settings = getsettings(obj,index)
        % function to calculate what the measurements settings are for the current correlator
        % create an array to hold these values    
-       m = obj.m;
-       n = obj.n;
-       settings = zeros(1,n);
+       settings = zeros(1,obj.n);
        % in general the index of a particular group of settings is given by "index = 1 + m1*(m+1)^(n-1) + m2*(m+1)^(n-2) + m3*(m+1)^(n-3)+..."    
-       settings(1) = idivide(int32(index-1),(m+1)^(n-1));
-       remainder = (index-1)/((m+1)^(n-1))-settings(1);
-       for i1 = 2:n
-           settings(i1) = round(remainder*(m+1));
-           remainder = remainder*(m+1) - settings(i1);
+       settings(1) = idivide(int32(index-1),(obj.m+1)^(obj.n-1));
+       remainder = (index-1)/((obj.m+1)^(obj.n-1))-settings(1);
+       for i1 = 2:obj.n
+           settings(i1) = round(remainder*(obj.m+1));
+           remainder = remainder*(obj.m+1) - settings(i1);
        end
       end
    end
