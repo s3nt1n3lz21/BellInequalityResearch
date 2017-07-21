@@ -35,10 +35,13 @@ for i1 = 1:6
     end
 end
 
+bestdimension = 2*(d-1)*m+((d-1)^2)*m^2
 states = importdata('Three_qubit_hierarchy.mat');
 numrows = size(states,1);
 ymatrix = zeros(numrows,(m+1)^n);
-for row = 1:1
+data = zeros(numrows,8);
+
+for row = 1:numrows
     ketstate = states(row,:).';
     b = rhodecomp(ketstate * ketstate').';
     numelx = size(tensorprojs,3);
@@ -57,10 +60,25 @@ for row = 1:1
     ymatrix(row,:) = y.';
     y.'
     [dimension,smax] = calcdimandclassicalbound(n,d,m,ymatrix(row,:))
+    data(row,1) = 0
+    data(row,2) = norm(x,1)
+    data(row,3) = dimension
+    data(row,4) = bestdimension
+    data(row,5) = dimension - bestdimension
+    data(row,6) = smax
+    
+    quantum = 0;
+    beststate = 0;
+    
+    data(row,7) = quantum
+    data(row,8) = beststate
     
     t2 = clock;
-    numsecs = etime(t2,t1)
-    timeleft = (numrows-row)*numsecs
+    numsecs = etime(t2,t1);
+    numsecsarray(row) = numsecs
+    timeleft = (numrows-row)*mean(numsecsarray)
     
 end
 
+% Collate good states with integer coefficients (or half integer etc)
+% Check algorithm works for first index 000
