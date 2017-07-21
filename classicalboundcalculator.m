@@ -116,7 +116,7 @@ classdef classicalboundcalculator < handle
 %                 end
                 if obj.smax == 'x'
                   % if smax not yet defined then set the value of smax and array of deterministic probabilities that give smax                    
-                  obj.smax = currentsmax
+                  obj.smax = currentsmax;
                   obj.detprobsgivesmax(obj.detprobsrows+1,:) = obj.detprobvalues;
                   obj.detprobsrows = obj.detprobsrows + 1;
                 else
