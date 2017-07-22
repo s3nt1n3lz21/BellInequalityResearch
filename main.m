@@ -35,11 +35,19 @@ for i1 = 1:6
     end
 end
 
-bestdimension = 2*(d-1)*m+((d-1)^2)*m^2
+bestdimension = 2*(d-1)*m+((d-1)^2)*m^2;
 states = importdata('Three_qubit_hierarchy.mat');
 numrows = size(states,1);
-ymatrix = zeros(numrows,(m+1)^n);
-data = zeros(numrows,8);
+
+statematrix = zeros(numrows,8);
+robustnessmatrix = zeros(numrows,1);
+inequalitymatrix = zeros(numrows,(m+1)^n);
+dimensionmatrix = zeros(numrows,1);
+bestdimensionmatrix = zeros(numrows,1);
+dimdiffmatrix = zeros(numrows,1);
+classicalboundmatrix = zeros(numrows,1);
+quantumboundmatrix = zeros(numrows,1);
+beststatematrix = zeros(numrows,8);
 
 for row = 1:numrows
     ketstate = states(row,:).';
@@ -57,21 +65,43 @@ for row = 1:numrows
     cvx_end
     robustness=cvx_optval;
     
-    ymatrix(row,:) = y.';
-    y.'
-    [dimension,smax] = calcdimandclassicalbound(n,d,m,ymatrix(row,:))
-    data(row,1) = 0
-    data(row,2) = norm(x,1)
-    data(row,3) = dimension
-    data(row,4) = bestdimension
-    data(row,5) = dimension - bestdimension
-    data(row,6) = smax
+    [dimension,smax] = calcdimandclassicalbound(n,d,m,inequalitymatrix(row,:));
     
-    quantum = 0;
-    beststate = 0;
+    robustnessmatrix(row,:) = norm(x,1);
+    inequalitymatrix(row,:) = y.';
+    dimensionmatrix(row,:) = dimension;
+    bestdimensionmatrix(row,:) = bestdimension;
+    dimdiffmatrix(row,:) = dimension - bestdimension;
+    classicalboundmatrix(row,:) = smax;
     
-    data(row,7) = quantum
-    data(row,8) = beststate
+    B = 0;
+    for index = 1:length(inequalitymatrix(row,:))
+        settings = getsettings(index,m,n)
+        numset = length(settings);
+        oparray = zeros(2,2,numset);
+        for party = 1: numset
+            settingindex = settings(party)
+            operator = paulis(:,:,settingindex+1);
+            oparray(:,:,party) = operator;
+        end
+        tensprod = kron(oparray(:,:,1),oparray(:,:,2));
+        B = B + inequalitymatrix(row,index)*kron(tensprod,oparray(:,:,3));
+    end
+    
+    [matrixeigvec,matrixeig] = eig(B)
+    
+    eigenvalues = zeros(1,length(matrixeig));
+    for i1 = 1:length(matrixeig)
+    eigenvalues(i1) = matrixeig(i1,i1)
+    end
+    quantum = max(eigenvalues)
+    index = find(eigenvalues == quantum)
+    beststate = matrixeigvec(:,index)
+   
+    quantumboundmatrix(row,:) = quantum;
+    beststatematrix(row,:) = beststate.';       
+    
+    T.Properties.RowNames = row;
     
     t2 = clock;
     numsecs = etime(t2,t1);
@@ -79,6 +109,9 @@ for row = 1:numrows
     timeleft = (numrows-row)*mean(numsecsarray)
     
 end
+
+data = table(states,robustnessmatrix,inequalitymatrix,dimensionmatrix,bestdimensionmatrix,dimdiffmatrix,classicalboundmatrix,quantumboundmatrix,beststatematrix);
+
 
 % Collate good states with integer coefficients (or half integer etc)
 % Check algorithm works for first index 000
