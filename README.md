@@ -16,6 +16,7 @@ Returns s = 0 if corrcoefflist is all zeros, Just skip the first index
 Create a method to clear the values up to the nuber of rows it is full, don't use the zeros function to reset the whole array of zeros when most of them already are zero.
 Create a getsettings function that is just a series of for loops and the settings are the current values of the counter variables, generalise it.
 Change Calcprobdist to a class
+Change the code so that you can ask it to only calculate smax (quicker) or smax and dimension.
 
 Notes
 Doesn't seem to work for n = 4 comparing to literature
