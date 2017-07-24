@@ -17,3 +17,6 @@ Generalise to any number of measurements and outcomes for each party
 Generalise the calculation of tensor products of projectors to a state of d qubits. (Create a function)
 Returns s = 0 if corrcoefflist is all zeros
 Create a method to clear the values up to the nuber of rows it is full, don't use the zeros function to reset the whole array of zeros when most of them already are zero.
+Just skip the first index
+Create a getsettings function that is just a series of for loops and the settings are the current values of the counter variables
+Change Calcprobdist to a class

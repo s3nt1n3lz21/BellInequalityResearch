@@ -33,7 +33,7 @@ classdef classicalboundcalculator < handle
    methods       
       function obj = classicalboundcalculator(n,d,m,corrcoefflist)
          % Constructor function to initialise properties      
-         obj.maxdim = 2*(d-1)*m+((d-1)^2)*m^2;
+         obj.maxdim = ((m*(d-1)+1)^n) - 1;
          obj.n = n;
          obj.d = d;
          obj.m = m;
@@ -95,46 +95,47 @@ classdef classicalboundcalculator < handle
                     % if the coefficient is zero skip the calculation 
                     if not(coeff) == 0
                         % for each correlator e.g <m1 m2> calculate the contributing terms to the expression for s              
-                        % get the correct settings e.g m1 and m2 from how far into the vector coefflist we are           
-                        obj.mvalues = getsettings(obj,i1);
+                        % get the correct settings e.g m1 and m2 from how far into the vector coefflist we are
+                        obj.mvalues = dec2base(i1-1,obj.m+1,obj.n)-'0';
                         % find which of the parties do make measurements as this affects the form of the expression                    
                         obj.pmm = find(obj.mvalues);
                         % from this find how many variables we have to loop/sum over                    
                         numpmm = length(obj.pmm);
-                        % now calculate the correlator of measurements e.g m1 and m2 by looping with recursion
+
+                        % Reset the dvalues, corrvalues and rows before each calculation    
                         obj.corrvaluesrows = 0;
                         obj.corrvalues = zeros((obj.d)^(numpmm),1);
+                        obj.dvalues = zeros(1,obj.n);
+                        
+                        % now calculate the correlator of measurements e.g m1 and m2 by looping with recursion                       
                         calccorr(obj,numpmm);
                         currentcorr = sum(obj.corrvalues);
                         currentsmax = currentsmax + coeff*currentcorr;
                     end
                 end
-%                 if obj.detprobsrows+1 > obj.maxdim
-%                   % If the index has gone out of bounds then we know that the current value of smax cannot be the correct one so reset the array
-%                    obj.detprobsgivesmax = zeros(obj.maxdim,obj.numvars);
-%                    obj.detprobsrows = 0;
-%                 end
+                currentsmax;
                 if obj.smax == 'x'
                   % if smax not yet defined then set the value of smax and array of deterministic probabilities that give smax                    
                   obj.smax = currentsmax;
-                  obj.detprobsgivesmax(obj.detprobsrows+1,:) = obj.detprobvalues;
+                  obj.detprobsgivesmax(1,:) = obj.detprobvalues;
                   obj.detprobsrows = obj.detprobsrows + 1;
                 else
-                  if currentsmax > obj.smax
-                  % Set the new value of smax and reset the array of deterministic probabilities that give smax                    
-                    obj.smax = currentsmax;
-                    obj.detprobsgivesmax = zeros(obj.maxdim,obj.numvars);
-                    obj.detprobsrows = 0;
-                  elseif currentsmax == obj.smax
-                  % Append the values of detprobs
-                    obj.detprobsgivesmax(obj.detprobsrows+1,:) = obj.detprobvalues;
-                    obj.detprobsrows = obj.detprobsrows + 1;
-                  else
-                  % otherwise don't do anything, continue to the next loop                     
-                  end    
+                     if currentsmax > obj.smax
+                     % Set the new value of smax and reset the array of deterministic probabilities that give smax with this new value                   
+                       obj.smax = currentsmax;
+                       obj.detprobsgivesmax = zeros(obj.maxdim,obj.numvars);
+                       obj.detprobsgivesmax(1,:) = obj.detprobvalues;
+                       obj.detprobsrows = 1;
+                     elseif currentsmax == obj.smax
+                     % Append the values of detprobs
+                       obj.detprobsgivesmax(obj.detprobsrows+1,:) = obj.detprobvalues;
+                       obj.detprobsrows = obj.detprobsrows + 1;
+                     else
+                     % otherwise don't do anything, continue to the next loop of deterministic probabilities                    
+                     end    
                 end
             else
-            % if constaints not obeyed don't do anything, just continue to the next loop     
+            % if constaints not obeyed don't do anything, just continue to the next loop of deterministic probabilities    
             end
           end
       end
@@ -154,7 +155,7 @@ classdef classicalboundcalculator < handle
        % if there are no more to loop over then calculate the contribution to the correlator    
        else
            curprodterm = 1;
-           % the expression will take the form of k products if there are k parties that make measurements        
+           % the expression will take the form of k products if there are k parties that make measurements
            for party = obj.pmm
                curprodterm = curprodterm*obj.detprobvalues(getdetprobindex(obj,party,obj.dvalues(party),obj.mvalues(party)));
            end
@@ -163,18 +164,6 @@ classdef classicalboundcalculator < handle
            % Add this value to the array corrvalues and keep track how full the array is  
            obj.corrvalues(obj.corrvaluesrows+1) = curprodterm;
            obj.corrvaluesrows = obj.corrvaluesrows + 1;
-       end
-      end
-      function settings = getsettings(obj,index)
-       % function to calculate what the measurements settings are for the current correlator
-       % create an array to hold these values    
-       settings = zeros(1,obj.n);
-       % in general the index of a particular group of settings is given by "index = 1 + m1*(m+1)^(n-1) + m2*(m+1)^(n-2) + m3*(m+1)^(n-3)+..."    
-       settings(1) = idivide(int32(index-1),(obj.m+1)^(obj.n-1));
-       remainder = (index-1)/((obj.m+1)^(obj.n-1))-settings(1);
-       for i1 = 2:obj.n
-           settings(i1) = round(remainder*(obj.m+1));
-           remainder = remainder*(obj.m+1) - settings(i1);
        end
       end
    end

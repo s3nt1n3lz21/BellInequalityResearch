@@ -76,11 +76,11 @@ for row = 1:numrows
     
     B = 0;
     for index = 1:length(inequalitymatrix(row,:))
-        settings = getsettings(index,m,n)
+        settings = dec2base(index-1,m+1,n)-'0';
         numset = length(settings);
         oparray = zeros(2,2,numset);
         for party = 1: numset
-            settingindex = settings(party)
+            settingindex = settings(party);
             operator = paulis(:,:,settingindex+1);
             oparray(:,:,party) = operator;
         end
@@ -88,15 +88,15 @@ for row = 1:numrows
         B = B + inequalitymatrix(row,index)*kron(tensprod,oparray(:,:,3));
     end
     
-    [matrixeigvec,matrixeig] = eig(B)
+    [matrixeigvec,matrixeig] = eig(B);
     
     eigenvalues = zeros(1,length(matrixeig));
     for i1 = 1:length(matrixeig)
-    eigenvalues(i1) = matrixeig(i1,i1)
+    eigenvalues(i1) = matrixeig(i1,i1);
     end
-    quantum = max(eigenvalues)
-    index = find(eigenvalues == quantum)
-    beststate = matrixeigvec(:,index)
+    quantum = max(eigenvalues);
+    index = find(eigenvalues == quantum);
+    beststate = matrixeigvec(:,index);
    
     quantumboundmatrix(row,:) = quantum;
     beststatematrix(row,:) = beststate.';       
