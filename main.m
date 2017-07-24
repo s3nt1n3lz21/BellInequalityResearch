@@ -7,6 +7,15 @@
 % operator. The corresponding eigenvector represents a better quantum state
 % that can be used to test the bell inequality.
 
+% A selection of test states for the calcdimandclassicalbound function with the
+% expected dimension and maximum classical value achievable found from
+% literature.
+
+% 8,2 (2,2,2,[0 0 0 0 1 1 0 1 -1])
+% 15,4 (2,2,3,[0 1 1 0 1 -1 -1 1 1 -1 -1 -1 0 1 -1 0])
+% 26,6 (3,2,2,[+0 +0 +2 +0 +1 -1 +2 -1 -1 +0 +1 -1 +1 -1 -2 -1 -2 +1 +2 -1 -1 -1 -2 +1 -1 +1 +2])
+% 80,9 (4,2,2,[+0 2 1 2 0 0 1 0 -1 2 0 0 0 1 1 0 1 -1 1 0 -1 0 1 -1 -1 -1 0 2 0 0 0 1 1 0 1 -1 0 1 -1 1 -5 2 -1 2 1 0 1 -1 -1 2 1 -1 1 0 1 0 -1 0 1 -1 -1 -1 0 0 1 -1 -1 2 1 -1 1 0 -1 -1 0 -1 1 0 0 0 -2])
+
 % define the pauli operators
 paulis = cat(3,[1,0;0,1],[0,1;1,0],[0,-i;i,0],[1,0;0,-1]);
 
