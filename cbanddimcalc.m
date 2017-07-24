@@ -1,4 +1,4 @@
-classdef classicalboundcalculator < handle
+classdef cbanddimcalc < handle
    properties
       % The number of parties, measurement outcomes and measurement settings       
       n
