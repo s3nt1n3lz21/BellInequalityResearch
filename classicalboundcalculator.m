@@ -113,7 +113,6 @@ classdef classicalboundcalculator < handle
                         currentsmax = currentsmax + coeff*currentcorr;
                     end
                 end
-                currentsmax;
                 if obj.smax == 'x'
                   % if smax not yet defined then set the value of smax and array of deterministic probabilities that give smax                    
                   obj.smax = currentsmax;
@@ -121,7 +120,7 @@ classdef classicalboundcalculator < handle
                   obj.detprobsrows = obj.detprobsrows + 1;
                 else
                      if currentsmax > obj.smax
-                     % Set the new value of smax and reset the array of deterministic probabilities that give smax with this new value                   
+                     % Set the new value of smax and reset the array of deterministic probabilities that give smax with this new value
                        obj.smax = currentsmax;
                        obj.detprobsgivesmax = zeros(obj.maxdim,obj.numvars);
                        obj.detprobsgivesmax(1,:) = obj.detprobvalues;
