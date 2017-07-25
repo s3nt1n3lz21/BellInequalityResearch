@@ -26,12 +26,26 @@ classdef cbanddimcalc < handle
       % An array used in calccorr to hold the values of the measurement outcomes d for each party as it loops over them.     
       dvalues
       % An array used in calccorr to hold all of the correlator terms which it
-      % calculates
+      % calculates.
       corrvalues
-      % current correlator term for the (Parties that Make Measurements)
+      % current correlator term for the (Parties that Make Measurements).
       pmm
-      % How full is the array of corrvalues
+      % How full is the array of corrvalues.
       corrvaluesrows
+      % An array used in calcprobdists to hold the current values of the possible
+      % outcomes.
+      darray
+      % An array used in calcprobdists to hold the current values of the
+      % measurent settings.
+      marray
+      % An array used in calcprobdists to hold the current probability
+      % distribution.
+      detprobs
+      % An array used to hold the current probability distribution in
+      % calcprobdists
+      probdist
+      % How full is the vector probdist
+      probdistelements
    end
    methods       
       function obj = cbanddimcalc(n,d,m,corrcoefflist)
@@ -51,7 +65,11 @@ classdef cbanddimcalc < handle
       function [dim,smax] = calc(obj)
       % CALC Calculate the dimension and classical bound.
        loopdetprobs(obj,obj.numvars);
-       dim = obj.dim;
+       % Calculate the probability distribution vectors from determinsitic
+       % probability array.
+       probdistsgivesmax = calcprobdists(obj);
+       % Calculate the dimension.
+       dim = calcdim(obj,probdistsgivesmax);
        smax = obj.smax;
       end
       function loopdetprobs(obj,varstoloop)
@@ -194,51 +212,53 @@ classdef cbanddimcalc < handle
            obj.corrvaluesrows = obj.corrvaluesrows + 1;
        end
       end
-      function calcprobdists(obj)
+      function [probdistsgivesmax] = calcprobdists(obj)
       % CALCPROBDISTS Calculate the probability distribution vectors that give
       % the classical bound from the array of deterministic probabilities that give the classical bound.
-          darray = zeros(1,obj.n);
-          marray = zeros(1,obj.n);
-          probdistsgivesmax = zeros(numdetprobs,(obj.d*obj.m)^obj.n);
+          obj.marray = zeros(1,obj.n);
+          obj.darray = zeros(1,obj.n);
+          probdistsgivesmax = zeros(obj.detprobsrows,(obj.d*obj.m)^obj.n);
           for row = 1:obj.detprobsrows
-              detprobs = obj.detprobsgivesmax(row,:);
-              probdist = calcprobdist(detprobs,obj.n,obj.n,darray,marray,n,d,m);
-              probdistsgivesmax(row,:) = probdist;
+              obj.detprobs = obj.detprobsgivesmax(row,:);
+              obj.probdist = NaN(1,(obj.d*obj.m)^obj.n);
+              obj.probdistelements = 0;
+              calcprobdist(obj,obj.n,obj.n);
+              probdistsgivesmax(row,:) = obj.probdist;
           end
-          reducedmatrix = rref(probdistsgivesmax)
-          dimension = rank(reducedmatrix);
       end
-      function [probdistsofar,numelements] = calcprobdist(vars,dvarstoloop,mvarstoloop,darray,marray,n,d,m)
-      % CALCPROBDIST Calculates the probability distribution vector from the deterministic probabilities
-          probdistsofar = NaN(1,(d*m)^n);
+      function calcprobdist(obj,dvarstoloop,mvarstoloop)
+      % CALCPROBDIST Calculates the probability distribution vector from the
+      % deterministic probabilities.
+      
+          % If there are outcome variables to loop over then loop over them (e.g d1
+          % d2).
           if dvarstoloop >= 1
-              numelements = 0;
-              for dvalue = 1:d
-                  darray(dvarstoloop) = dvalue;
-                  [innerelements,numinnerelements] = calcprobdist(vars,dvarstoloop-1,mvarstoloop,darray,marray,n,d,m);
-                  probdistsofar(numelements+1:numelements+numinnerelements) = innerelements(1:numinnerelements);
-                  numelements = numelements+numinnerelements;
+              for dvalue = 1:obj.d
+                  obj.darray(dvarstoloop) = dvalue;
+                  calcprobdist(obj,dvarstoloop-1,mvarstoloop);
               end
+          % If there are measurement settings to loop over then loop over them (e.g
+          % m1 m2).
           elseif mvarstoloop >= 1
-              numelements = 0;
-              for mvalue = 1:m
-                  marray(mvarstoloop) = mvalue;
-                  [innerelements,numinnerelements] = calcprobdist(vars,dvarstoloop,mvarstoloop-1,darray,marray,n,d,m);
-                  probdistsofar(numelements+1:numelements+numinnerelements) = innerelements(1:numinnerelements);
-                  numelements = numelements+numinnerelements;
+              for mvalue = 1:obj.m
+                  obj.marray(mvarstoloop) = mvalue;
+                  calcprobdist(obj,dvarstoloop,mvarstoloop-1);
               end
+          % Otherwise calculate the current probability term in the probability distribution vector.          
           else
-              numelements = 1;
               curprodterm = 1;
-              for party = 1:n
-                  curprodterm = curprodterm*vars(getdetprobindex(party,darray(party),marray(party),d,m));
+              for party = 1:obj.n
+                  curprodterm = curprodterm*obj.detprobs(getdetprobindex(obj,party,obj.darray(party),obj.marray(party)));
               end
-              probdistsofar(numelements) = curprodterm;
+              obj.probdist(obj.probdistelements+1) = curprodterm;
+              obj.probdistelements = obj.probdistelements + 1;
           end
       end
-      function calcdim(obj)
+      function [dim] = calcdim(~,probdistsgivesmax)
       % CALCDIM Calculate the dimension of the bell inequality from the
       % probability distributions that give the classical bound.
+      reducedmatrix = rref(probdistsgivesmax);
+      dim = rank(reducedmatrix);
       end
    end
 end
