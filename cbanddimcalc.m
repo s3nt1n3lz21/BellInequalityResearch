@@ -1,38 +1,41 @@
 classdef cbanddimcalc < handle
-   properties
-      % The number of parties, measurement outcomes and measurement settings       
+% CBANDDIMCALC A class used to calculate the dimension and classical bound
+% of a bell inequality.
+   properties      
+      % The number of parties n, measurement outcomes d and measurement settings m. Here they are assumed to all be the same.      
       n
       d
       m
-      % The number of deterministic probability distributions
+      % The number of single party deterministic probabilities.
       numvars
-      % The maximum possible dimension of the bell inequality is also the maximum number of deterministic probability distributions that give smax
+      % The maximum possible dimension of the bell inequality is an estimate of
+      % the maximum number of ways of getting smax, and so the memory allocated.
       maxdim
-      % The correlator coefficient list  
+      % The correlator coefficient list.  
       corrcoefflist
-      % The array of current values of the deterministic probabilities      
+      % The array of the current values of the single party deterministic probabilities.      
       detprobvalues
-      % The current maximum found so far
+      % The current maximum found so far.
       smax
-      % The array of deterministic probabilities that give smax      
+      % The array of deterministic probabilities that give smax.      
       detprobsgivesmax
-      % How full is the array of deterministic probabilities      
+      % How many rows full is the array of deterministic probabilities (not the number of rows).     
       detprobsrows
-      % An array to hold the current measurement settings      
+      % An array to hold the current measurement settings.      
       mvalues
-      % An array used in calccorr to loop over the possible values of the measurement outcomes      
+      % An array used in calccorr to hold the values of the measurement outcomes d for each party as it loops over them.     
       dvalues
-      % An array used in calccorr to hold all of the correlator terms which it calculates and then is summed later
+      % An array used in calccorr to hold all of the correlator terms which it
+      % calculates
       corrvalues
-      % An array used in calccorr to hold the measurement settings for the
       % current correlator term for the (Parties that Make Measurements)
       pmm
       % How full is the array of corrvalues
       corrvaluesrows
    end
    methods       
-      function obj = classicalboundcalculator(n,d,m,corrcoefflist)
-         % Constructor function to initialise properties      
+      function obj = cbanddimcalc(n,d,m,corrcoefflist)
+         % CBANDDIMCALC Constructor function to the initialise properties.      
          obj.maxdim = ((m*(d-1)+1)^n) - 1;
          obj.n = n;
          obj.d = d;
@@ -45,12 +48,14 @@ classdef cbanddimcalc < handle
          obj.smax = 'x';
          obj.dvalues = zeros(1,n);
       end
-      function [smax,detprobsgivesmax] = calcclassicalbound(obj)
+      function [dim,smax] = calc(obj)
+      % CALC Calculate the dimension and classical bound.
        loopdetprobs(obj,obj.numvars);
+       dim = obj.dim;
        smax = obj.smax;
-       detprobsgivesmax = obj.detprobsgivesmax;
       end
       function loopdetprobs(obj,varstoloop)
+      % LOOPDETPROBS The main algorithm to loop over the possible values of the deterministic probabilities (0 or 1)       
           if varstoloop >= 1
           % if there is still a variable to loop over, loop over it's possible values (0 or 1)            
                for value = 0:1

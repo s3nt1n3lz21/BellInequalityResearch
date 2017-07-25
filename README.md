@@ -17,6 +17,7 @@ Create a method to clear the values up to the nuber of rows it is full, don't us
 Create a getsettings function that is just a series of for loops and the settings are the current values of the counter variables, generalise it.
 Change Calcprobdist to a class
 Change the code so that you can ask it to only calculate smax (quicker) or smax and dimension.
+Some of the properties could have been made local variables to the function, but weren't because of the recursion and would have taken up a lot of memory. However, they can be turned into handle variables.
 
 Notes
 Doesn't seem to work for n = 4 comparing to literature
