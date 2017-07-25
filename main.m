@@ -18,6 +18,8 @@
 % 80,10 (4,2,2,[0 3 1 3 0 -1 1 -1 0 3 0 -1 0 0 0 -1 0 -1 1 -1 0 -1 0 -1 0 -1 -1 3 0 -1 0 0 0 -1 0 -1 0 0 0 0 -3 1 0 1 1 -1 0 -1 0 1 1 -1 1 0 1 -1 0 -1 0 -1 0 -1 -1 -1 0 -1 0 1 1 - 1 0 0 -1 -1 -1 1 0 -1 0 -1])
 % 63,8 (3,2,3,[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 -2 0 0 -2 1 1 0 0 1 -1 0 0 0 0 0 -2 1 1 0 1 4 1 0 1 1 0 0 0 0 0 0 0 1 -1 0 1 1 0 0 -1 0 -1
 
+fprintf("Initialising...\n")
+
 % define the pauli operators
 paulis = cat(3,[1,0;0,1],[0,1;1,0],[0,-1i;1i,0],[1,0;0,-1]);
 
@@ -60,23 +62,26 @@ classicalboundmatrix = zeros(numrows,1);
 quantumboundmatrix = zeros(numrows,1);
 beststatematrix = zeros(numrows,8);
 
+fprintf("Starting...\n")
+
 for row = 1:numrows
     ketstate = states(row,:).';
     b = rhodecomp(ketstate * ketstate').';
     numelx = size(tensorprojs,3);
     A = vectensorprojs;
+
     t1 = clock;
     
-    cvx_begin 
-        variable x(numelx)
+    cvx_begin quiet; 
+        variable x(numelx);
         dual variable y;
-        minimize( norm( x, 1 ) )
-        subject to
-          y: A * x == b
-    cvx_end
+        minimize( norm( x, 1 ) );
+        subject to;
+          y: A * x == b;
+    cvx_end;
     robustness=cvx_optval;
     
-    [dimension,smax] = calcdimandclassicalbound(n,d,m,inequalitymatrix(row,:));
+    [dimension,smax] = calcdimandclassicalbound(n,d,m,y.');
     
     robustnessmatrix(row,:) = norm(x,1);
     inequalitymatrix(row,:) = y.';
@@ -114,15 +119,18 @@ for row = 1:numrows
     
     T.Properties.RowNames = row;
     
+    % Get the current time in seconds.
     t2 = clock;
+    % Calculate the time taken for this calculation.
     numsecs = etime(t2,t1);
-    numsecsarray(row) = numsecs
-    timeleft = (numrows-row)*mean(numsecsarray)
+    % Add this to an array.
+    numsecsarray(row) = numsecs;
+    % Estimated time left in seconds, from the average of the time taken per
+    % calculation.
+    timeleftsecs = (numrows-row)*mean(numsecsarray);
+    % Print out the estimated time left in a nice format.
+    estimatedtimeleft = datestr(timeleftsecs/(24*60*60), 'DD:HH:MM:SS.FFF')  
     
 end
 
 data = table(states,robustnessmatrix,inequalitymatrix,dimensionmatrix,bestdimensionmatrix,dimdiffmatrix,classicalboundmatrix,quantumboundmatrix,beststatematrix);
-
-
-% Collate good states with integer coefficients (or half integer etc)
-% Check algorithm works for first index 000
