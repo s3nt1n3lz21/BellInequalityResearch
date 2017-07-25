@@ -1,14 +1,16 @@
-% Here I calculate the robustness and other quantities for a variety of
-% states in the file "three_qubit_hierarchary". I calculate the classical
-% bound and dimension of the bell inequality found by calculating the
-% robustness. I also calculate the difference of the dimension of the bell
-% inequality from the dimension of the best possible bell inequality and an
-% estimation of the quantum bound using the eigenvalue of the bell
-% operator. The corresponding eigenvector represents a better quantum state
-% that can be used to test the bell inequality.
+% Calculating the robustness, maximum classical value and dimension and other quantities for a variety of
+% states in the file "three_qubit_hierarchary". The robustness of each
+% state is calculated and from this we get the coefficient list that
+% represents a bell inequality. This is then fed into an algorithm
+% calcdimandclassicalbound which calculates the maximum classical value and
+% dimension of the bell inequality. The dimension is compared to the best
+% possible dimension and an estimation of the quantum bound is calculated
+% from the maximum eigenvalue of the bell operator. The corresponding
+% eigenector represents a better quantum state that can be used to test the
+% bell inequality.
 
 % A selection of test states for the calcdimandclassicalbound function with the
-% expected dimension and maximum classical value achievable found from
+% expected dimension and maximum classical value achievable, these are found from
 % literature.
 
 % 8,2 (2,2,2,[0 0 0 0 1 1 0 1 -1])
@@ -20,7 +22,13 @@
 
 fprintf("Initialising...\n")
 
-% define the pauli operators
+
+% The states given in the file are 3 qubit states and each row represents
+% one state with each element being the coefficient in the standard basis.
+% To calculate the states and the corresponding bell inequality we have to
+% find the decomposition of the state into i
+
+% First define the pauli operators
 paulis = cat(3,[1,0;0,1],[0,1;1,0],[0,-1i;1i,0],[1,0;0,-1]);
 
 % create the six projection operators from these

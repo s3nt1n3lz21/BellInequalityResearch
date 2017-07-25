@@ -22,6 +22,7 @@ BUGS/VALIDATION:
 - Include validation of dimension of the correlator coefficient list.
 - Include a check of the correlator coefficient list to see if it is all zeros.
 - Check the algorithm works for first index.
+- Instead of checking whether a coefficient is zero check whether it is very close to zero e.g within 10^7, this may help deal with precision errors.
 
 OTHER:
 - Tidy up main code.
