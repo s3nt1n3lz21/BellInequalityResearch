@@ -1,14 +1,25 @@
-# BellInequalityResearch
-Summer 2017 Research Project
+Title: Bell Inequality Classical Bound And Dimension Calculator.
+Author: Neil Smith
+Date: 26/07/2017
+Contact Info: neilcsmith21@gmail.com
+Affiliation: The University Of Sheffield
 
-Code to calculate the maximum classical value of any bell inequality of the class of scenarios (n,d,m). Note throughout the scenarios are denoted (n,d,m) in that order where n is the number of parties, d is the number of measurement outcomes and m is the number of measurement settings. This is instead of the usual notation of (n,m,d) since the deterministic probabilities are written D_n_i(d_i|m_i) and makes the code easier to read and understand.
+DESCRIPTION:
+An algorithm to calculate the maximum classical value and dimension of any bell inequality of the scenarios (n,d,m) where n is the number of parties, d is the number of measurement outcomes and m is the number of measurement settings, here it is assumed that these numbers are the same for each party.
+To ensure it always gets the correct answer, it simply iterates over all possible combinations of the single party deterministic probabilities (0 or 1) which are written as D_ni(di,mi) for party ni with measurement outcome di and setting mi. This can be thought of as changing a binary number from all zeros 000... to all ones 111... Since there are nmd of these deterministic probabilities or variables then there will be 2^(nmd) possible states to explore, the problem is therefore exponential in time but can be made polynomial in memory. 
+The simplest method is to just write out a series of for loops, but in general there will be nmd for loops and so to generalise the process, recursion is used. A function loops over the possible values of a variable then calls the function again with one less variable to loop over, if there are no more then it performs the calculation. However doing this with a normal function would lead to large numbers of copies of variables in memory, instead a class design is used where the data the algorithm has to perform calculations upon is made a property so any part of the inner nested recursive functions can access the data at any time and ensures there is only one copy of the data.
+
+USAGE:
+To use the algorithm simply specify the scenario and the correlator coefficient list associated with the Bell Inequality when creating an instance and then call the calc method on the object to get the dimension and classical bound.
+
+#######################################################
 
 TODOS:
-Some of the properties could have been made local variables to the function, but weren't because of the recursion and would have taken up a lot of memory. However, they can be turned into handle variables.
 
 OPTIMIZATION:
 - Make m,n and d constants.
 - When resetting arrays, clear the rows up to the number of rows they are full, don't use the zeros function to reset the whole array of zeros when most of them are already zero.
+- Maybe have a better implementation using handle variables, is this possible?
 
 FUNCTIONALITY:
 - Generalise to any number of measurements and outcomes for each party.
@@ -21,14 +32,4 @@ BUGS/VALIDATION:
 - Doesn't seem to work for n = 4 comparing to literature.
 - Include a check of the correlator coefficient list to see if it is all zeros.
 - Check the algorithm works for first index.
-- Instead of checking whether a coefficient is zero check whether it is very close to zero e.g within 10^7, this may help deal with precision errors.
-- Check magnitude of vector b
-- Go through code with these states, using breakpoints.
-
-OTHER:
-- Tidy up main code.
-- Write the readme explanation and usage.
-- Look at handle variables.
-
-PERSONAL:
-- Set up Git so i don't have to put in the password every time.
+- Instead of checking whether a coefficient is zero check whether it is very close to zero e.g within 10^7, this may help deal with precision errors and speed up the calculation.
