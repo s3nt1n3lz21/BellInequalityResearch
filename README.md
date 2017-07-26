@@ -23,6 +23,8 @@ BUGS/VALIDATION:
 - Include a check of the correlator coefficient list to see if it is all zeros.
 - Check the algorithm works for first index.
 - Instead of checking whether a coefficient is zero check whether it is very close to zero e.g within 10^7, this may help deal with precision errors.
+- Check magnitude of vector b
+- Go through code with these states, using breakpoints.
 
 OTHER:
 - Tidy up main code.

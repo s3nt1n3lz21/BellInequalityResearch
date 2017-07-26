@@ -25,24 +25,28 @@ fprintf("Initialising...\n")
 
 % The states given in the file are 3 qubit states and each row represents
 % one state with each element being the coefficient in the standard basis.
-% To calculate the states and the corresponding bell inequality we have to
-% find the decomposition of the state into i
+% To calculate the robustness and the corresponding bell inequality we have to
+% find the decomposition of the rho state into the basis of tensor products
+% of projector states.
 
-% First define the pauli operators
+% First define the pauli operators.
 paulis = cat(3,[1,0;0,1],[0,1;1,0],[0,-1i;1i,0],[1,0;0,-1]);
 
-% create the six projection operators from these
+% Create the six projection operators from these.
 for i1 = 1:3
     sproj(:,:,i1) = 0.5*(eye(2)+paulis(:,:,i1+1));
     sproj(:,:,i1+3) = 0.5*(eye(2)-paulis(:,:,i1+1));
 end
 
-% create an array of all the possible tensor products of these projectors
-% and their decomposition into the basis.
-
+% There are three qubits so n = 3, and there are three pauli measurement
+% operators so m = 3 and there are two possible outcomes for each
+% measurement so d = 2.
 n = 3;
 d = 2;
 m = 3;
+
+% Create an array of all the possible tensor products of these projectors
+% and their decomposition into the basis.
 tensorprojs = zeros(2^n,2^n,6^n);
 vectensorprojs = zeros((m+1)^n,6^n);
 ind = 1;
@@ -56,10 +60,13 @@ for i1 = 1:6
     end
 end
 
-bestdimension = 2*(d-1)*m+((d-1)^2)*m^2;
+% Define the best possible dimension for the scenario.
+bestdimension = ((m*(d-1)+1)^n) - 1;
+% Get the states from file.
 states = importdata('Three_qubit_hierarchy.mat');
 numrows = size(states,1);
 
+% Create arrays to hold all of the data.
 statematrix = zeros(numrows,8);
 robustnessmatrix = zeros(numrows,1);
 inequalitymatrix = zeros(numrows,(m+1)^n);
@@ -72,11 +79,20 @@ beststatematrix = zeros(numrows,8);
 
 fprintf("Starting...\n")
 
+% Looping over each state calculate the decomposition of the state and
+% solve Ax=b finding the solution which minimizes the L1 norm of x. The
+% minimum L1 norm of x is the robustness of the state. From this we can
+% also calculate the corresponding Bell Inequality y. This is then plugged
+% into the algorithm to calculate its dimension and classical bound.
+
 for row = 1:numrows
     ketstate = states(row,:).';
     b = rhodecomp(ketstate * ketstate').';
+    b
+    size(b)
     numelx = size(tensorprojs,3);
-    A = vectensorprojs;
+    A = vectensorprojs
+    size(A)
 
     t1 = clock;
     
@@ -98,7 +114,12 @@ for row = 1:numrows
     dimdiffmatrix(row,:) = dimension - bestdimension;
     classicalboundmatrix(row,:) = smax;
     
-    B = 0;
+    % Also calculate an estimate for the quantum bound by calculating the
+    % maximum eigenvalue of the bell operator associated with the Bell
+    % Inequality. The corresponding eigenvector is a better test...?????
+    
+    % First calculate the Bell Operator b.
+    b = 0;
     for index = 1:length(inequalitymatrix(row,:))
         settings = dec2base(index-1,m+1,n)-'0';
         numset = length(settings);
@@ -109,10 +130,11 @@ for row = 1:numrows
             oparray(:,:,party) = operator;
         end
         tensprod = kron(oparray(:,:,1),oparray(:,:,2));
-        B = B + inequalitymatrix(row,index)*kron(tensprod,oparray(:,:,3));
+        b = b + inequalitymatrix(row,index)*kron(tensprod,oparray(:,:,3));
     end
     
-    [matrixeigvec,matrixeig] = eig(B);
+    % Calculate the eigenvalue and eigenvector.
+    [matrixeigvec,matrixeig] = eig(b);
     
     eigenvalues = zeros(1,length(matrixeig));
     for i1 = 1:length(matrixeig)
@@ -141,4 +163,5 @@ for row = 1:numrows
     
 end
 
+% Put all the data into a table.
 data = table(states,robustnessmatrix,inequalitymatrix,dimensionmatrix,bestdimensionmatrix,dimdiffmatrix,classicalboundmatrix,quantumboundmatrix,beststatematrix);
