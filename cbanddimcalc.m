@@ -61,6 +61,10 @@ classdef cbanddimcalc < handle
          obj.detprobsrows = 0;
          obj.smax = 'x';
          obj.dvalues = zeros(1,n);
+         listsize = size(corrcoefflist);
+         if not(listsize == (m+1)^n)
+            fprintf("Error, the dimension of the correlator coefficient list does not match the scenario")
+         end
       end
       function [dim,smax] = calc(obj)
       % CALC Calculate the dimension and classical bound.
@@ -156,7 +160,7 @@ classdef cbanddimcalc < handle
                 else
                      % If s is greater than the current maximum then set the new value of smax and reset the array of deterministic 
                      % probabilities that give smax with this new value.
-                     if s > obj.smax
+                     if (s > 1.01*obj.smax)
                        obj.smax = s;
                        obj.detprobsgivesmax = zeros(obj.maxdim,obj.numvars);
                        obj.detprobsgivesmax(1,:) = obj.detprobvalues;
@@ -164,7 +168,7 @@ classdef cbanddimcalc < handle
 
                      % If s is the same as the current maximum, append the deterministic
                      % probabilities to the array of deterministic probabilities that give smax.
-                     elseif s == obj.smax
+                     elseif ((0.99*obj.smax <= s)  && (s <= 1.01*obj.smax))
                        obj.detprobsgivesmax(obj.detprobsrows+1,:) = obj.detprobvalues;
                        obj.detprobsrows = obj.detprobsrows + 1;
                        
@@ -218,6 +222,9 @@ classdef cbanddimcalc < handle
           obj.marray = zeros(1,obj.n);
           obj.darray = zeros(1,obj.n);
           probdistsgivesmax = zeros(obj.detprobsrows,(obj.d*obj.m)^obj.n);
+          obj.detprobsgivesmax
+          size(obj.detprobsgivesmax,1)
+          obj.detprobsrows
           for row = 1:obj.detprobsrows
               obj.detprobs = obj.detprobsgivesmax(row,:);
               obj.probdist = NaN(1,(obj.d*obj.m)^obj.n);
@@ -225,6 +232,8 @@ classdef cbanddimcalc < handle
               calcprobdist(obj,obj.n,obj.n);
               probdistsgivesmax(row,:) = obj.probdist;
           end
+          probdistsgivesmax
+          size(probdistsgivesmax,1)
       end
       function calcprobdist(obj,dvarstoloop,mvarstoloop)
       % CALCPROBDIST Calculates the probability distribution vector from the
