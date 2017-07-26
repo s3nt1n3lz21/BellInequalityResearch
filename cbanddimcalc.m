@@ -222,9 +222,6 @@ classdef cbanddimcalc < handle
           obj.marray = zeros(1,obj.n);
           obj.darray = zeros(1,obj.n);
           probdistsgivesmax = zeros(obj.detprobsrows,(obj.d*obj.m)^obj.n);
-          obj.detprobsgivesmax
-          size(obj.detprobsgivesmax,1)
-          obj.detprobsrows
           for row = 1:obj.detprobsrows
               obj.detprobs = obj.detprobsgivesmax(row,:);
               obj.probdist = NaN(1,(obj.d*obj.m)^obj.n);
@@ -232,8 +229,6 @@ classdef cbanddimcalc < handle
               calcprobdist(obj,obj.n,obj.n);
               probdistsgivesmax(row,:) = obj.probdist;
           end
-          probdistsgivesmax
-          size(probdistsgivesmax,1)
       end
       function calcprobdist(obj,dvarstoloop,mvarstoloop)
       % CALCPROBDIST Calculates the probability distribution vector from the

@@ -10,7 +10,7 @@ To ensure it always gets the correct answer, it simply iterates over all possibl
 The simplest method is to just write out a series of for loops, but in general there will be nmd for loops and so to generalise the process, recursion is used. A function loops over the possible values of a variable then calls the function again with one less variable to loop over, if there are no more then it performs the calculation. However doing this with a normal function would lead to large numbers of copies of variables in memory, instead a class design is used where the data the algorithm has to perform calculations upon is made a property so any part of the inner nested recursive functions can access the data at any time and ensures there is only one copy of the data.
 
 USAGE:
-To use the algorithm simply specify the scenario and the correlator coefficient list associated with the Bell Inequality when creating an instance and then call the calc method on the object to get the dimension and classical bound.
+To use the algorithm simply specify the scenario and the correlator coefficient list associated with the Bell Inequality when calling the calcdimandclassicalbound function.
 
 #######################################################
 
