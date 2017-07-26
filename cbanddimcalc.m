@@ -63,7 +63,7 @@ classdef cbanddimcalc < handle
          obj.dvalues = zeros(1,n);
          listsize = size(corrcoefflist);
          if not(listsize == (m+1)^n)
-            fprintf("Error, the dimension of the correlator coefficient list does not match the scenario")
+            fprintf("Error, the dimension of the correlator coefficient list does not match the scenario\n The dimension is %.0f when it should be %.0f",size(corrcoefflist,2),(m+1)^n)
          end
       end
       function [dim,smax] = calc(obj)
@@ -160,7 +160,7 @@ classdef cbanddimcalc < handle
                 else
                      % If s is greater than the current maximum then set the new value of smax and reset the array of deterministic 
                      % probabilities that give smax with this new value.
-                     if (s > 1.01*obj.smax)
+                     if (s > 1.0001*obj.smax)
                        obj.smax = s;
                        obj.detprobsgivesmax = zeros(obj.maxdim,obj.numvars);
                        obj.detprobsgivesmax(1,:) = obj.detprobvalues;
@@ -168,7 +168,7 @@ classdef cbanddimcalc < handle
 
                      % If s is the same as the current maximum, append the deterministic
                      % probabilities to the array of deterministic probabilities that give smax.
-                     elseif ((0.99*obj.smax <= s)  && (s <= 1.01*obj.smax))
+                     elseif ((0.9999*obj.smax <= s)  && (s <= 1.0001*obj.smax))
                        obj.detprobsgivesmax(obj.detprobsrows+1,:) = obj.detprobvalues;
                        obj.detprobsrows = obj.detprobsrows + 1;
                        
