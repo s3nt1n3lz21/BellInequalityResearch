@@ -10,7 +10,14 @@ To ensure it always gets the correct answer, it simply iterates over all possibl
 The simplest method is to just write out a series of for loops, but in general there will be nmd for loops and so to generalise the process, recursion is used. A function loops over the possible values of a variable then calls the function again with one less variable to loop over, if there are no more then it performs the calculation. However doing this with a normal function would lead to large numbers of copies of variables in memory, instead a class design is used where the data the algorithm has to perform calculations upon is made a property so any part of the inner nested recursive functions can access the data at any time and ensures there is only one copy of the data.
 
 USAGE:
-To use the algorithm simply specify the scenario and the correlator coefficient list associated with the Bell Inequality when calling the calcdimandclassicalbound function.
+To use the algorithm simply specify the scenario and the correlator coefficient list associated with the Bell Inequality when calling the calcdimandclassicalbound function. The list should be a row vector (m+1)^n long. 
+As an example of the form of the input consider the CHSH inequality in the scenario (2,2,2), the list has the form [0 0 0 0 1 1 0 1 -1]. The first element represents all the parties making no measurements, a party making no measurement represents a measurement setting of 0 and so this would be written as 00. The second represents the second person performing the first measurement so 01 and the third represents the second person performing their second measurement so 02. The next would be 10 and so on, representing the incrementation of a base n number.
+So this represents a Bell Inequality of the form 0*[00]+0*[01]+0*[02]+0*[10]+1*[11]+1*[12]+0*[20]+1*[21]-1*[22].
+
+FILELIST:
+- "cbanddimcalc.m" The algorithm implemented as a class.
+- "calcdimandclassicalbound.m" The function that acts as a wrapper for the class, this is what a user would call.
+- "main.m" An 
 
 #######################################################
 
