@@ -1,32 +1,17 @@
-% Calculating the robustness, maximum classical value and dimension and other quantities for a variety of
-% states in the file "three_qubit_hierarchary". The robustness of each
-% state is calculated and from this we get the coefficient list that
-% represents a bell inequality. This is then fed into an algorithm
-% calcdimandclassicalbound which calculates the maximum classical value and
-% dimension of the bell inequality. The dimension is compared to the best
-% possible dimension and an estimation of the quantum bound is calculated
+% An example of the application of the algorithm to some states. In this
+% file we calculate the robustness and Bell inequality of each state and
+% then apply this algorithm to these Bell inequalities. The dimension is compared to the best
+% possible dimension and an estimation of the quantum bound is also calculated
 % from the maximum eigenvalue of the bell operator. The corresponding
-% eigenector represents a better quantum state that can be used to test the
-% bell inequality.
-
-% A selection of test states for the calcdimandclassicalbound function with the
-% expected dimension and maximum classical value achievable, these are found from
-% literature.
-
-% 8,2 (2,2,2,[0 0 0 0 1 1 0 1 -1])
-% 15,4 (2,2,3,[0 1 1 0 1 -1 -1 1 1 -1 -1 -1 0 1 -1 0])
-% 26,6 (3,2,2,[+0 +0 +2 +0 +1 -1 +2 -1 -1 +0 +1 -1 +1 -1 -2 -1 -2 +1 +2 -1 -1 -1 -2 +1 -1 +1 +2])
-% 63,8 (3,2,3,[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 -2 0 0 -2 1 1 0 0 1 -1 0 0 0 0 0 -2 1 1 0 1 4 1 0 1 1 0 0 0 0 0 0 0 1 -1 0 1 1 0 0 -1 0 -1])
-% 80,9 (4,2,2,[+0 2 1 2 0 0 1 0 -1 2 0 0 0 1 1 0 1 -1 1 0 -1 0 1 -1 -1 -1 0 2 0 0 0 1 1 0 #-1 -1 0 1 #0 1 -5 2 -1 2 1 0 1 -1 -1 2 1 -1 1 0 1 0 -1 0 1 -1 -1 -1 0 0 1 -1 -1 2 1 -1 1 0 -1 -1 0 -1 1 0 0 0 -2])
-% 80,10 (4,2,2,[0 3 1 3 0 -1 1 -1 0 3 0 -1 0 0 0 -1 0 -1 1 -1 0 -1 0 -1 0 -1 -1 3 0 -1 0 0 0 -1 0 -1 0 0 0 0 -3 1 0 1 1 -1 0 -1 0 1 1 -1 1 0 1 -1 0 -1 0 -1 0 -1 -1 -1 0 -1 0 1 1 -1 1 0 0 -1 -1 -1 1 0 -1 0 -1])
-
-fprintf("Initialising...\n")
+% eigenvector is also calculated but this is left commented out.
 
 % The states given in the file are 3 qubit states and each row represents
 % one state with each element being the coefficient in the standard basis.
 % To calculate the robustness and the corresponding bell inequality we have to
-% find the decomposition of the rho state into the basis of tensor products
+% find the decomposition of the density matrix rho, into the basis of tensor products
 % of projector states.
+
+fprintf("Initialising...\n")
 
 % First define the pauli operators.
 paulis = cat(3,[1,0;0,1],[0,1;1,0],[0,-1i;1i,0],[1,0;0,-1]);
@@ -74,13 +59,14 @@ bestdimensionmatrix = zeros(numrows,1);
 dimdiffmatrix = zeros(numrows,1);
 classicalboundmatrix = zeros(numrows,1);
 quantumboundmatrix = zeros(numrows,1);
-beststatematrix = zeros(numrows,8);
+bounddiffmatrix = zeros(numrows,1);
+% beststatematrix = zeros(numrows,8);
 
 fprintf("Starting...\n")
 
 % Looping over each state calculate the decomposition of the state and
 % solve Ax=b finding the solution which minimizes the L1 norm of x. The
-% minimum L1 norm of x is the robustness of the state. From this we can
+% minimum L1 norm of x is the robustness of the state. Due to duality, from this we can
 % also calculate the corresponding Bell Inequality y. This is then plugged
 % into the algorithm to calculate its dimension and classical bound.
 
@@ -90,8 +76,10 @@ for row = 1:numrows
     numelx = size(tensorprojs,3);
     A = vectensorprojs;
 
+    % Start timing the calculation.
     t1 = clock;
     
+    % Calculate the robustness and corresponding Bell Inequality y.
     cvx_begin quiet; 
         variable x(numelx);
         dual variable y;
@@ -101,8 +89,10 @@ for row = 1:numrows
     cvx_end;
     robustness=cvx_optval;
     
+    % Apply the algorithm.
     [dimension,smax] = calcdimandclassicalbound(n,d,m,y.');
     
+    % Store the data.
     robustnessmatrix(row,:) = norm(x,1);
     inequalitymatrix(row,:) = y.';
     dimensionmatrix(row,:) = dimension;
@@ -110,11 +100,8 @@ for row = 1:numrows
     dimdiffmatrix(row,:) = dimension - bestdimension;
     classicalboundmatrix(row,:) = smax;
     
-    % Also calculate an estimate for the quantum bound by calculating the
-    % maximum eigenvalue of the bell operator associated with the Bell
-    % Inequality. The corresponding eigenvector is a better test...?????
-    
-    % First calculate the Bell Operator b.
+    % Calculate the Bell Operator b to calculate the estimation of the
+    % quantum bound.
     b = 0;
     for index = 1:length(inequalitymatrix(row,:))
         settings = dec2base(index-1,m+1,n)-'0';
@@ -129,7 +116,7 @@ for row = 1:numrows
         b = b + inequalitymatrix(row,index)*kron(tensprod,oparray(:,:,3));
     end
     
-    % Calculate the eigenvalue and eigenvector.
+    % Calculate the eigenvalue.
     [matrixeigvec,matrixeig] = eig(b);
     
     eigenvalues = zeros(1,length(matrixeig));
@@ -137,27 +124,26 @@ for row = 1:numrows
     eigenvalues(i1) = matrixeig(i1,i1);
     end
     quantum = max(eigenvalues);
-    index = find(eigenvalues == quantum);
-    beststate = matrixeigvec(:,index);
+%     index = find(eigenvalues == quantum);
+%     beststate = matrixeigvec(:,index);
    
     quantumboundmatrix(row,:) = quantum;
-    beststatematrix(row,:) = beststate.';       
+%     beststatematrix(row,:) = beststate.';       
     
     T.Properties.RowNames = row;
     
-    % Get the current time in seconds.
+    % End timing the calculation.
     t2 = clock;
     % Calculate the time taken for this calculation.
     numsecs = etime(t2,t1);
     % Add this to an array.
     numsecsarray(row) = numsecs;
-    % Estimated time left in seconds, from the average of the time taken per
-    % calculation.
+    % Calculate the estimated time left in seconds, from the average time taken per calculation.
     timeleftsecs = (numrows-row)*mean(numsecsarray);
-    % Print out the estimated time left in a nice format.
-    estimatedtimeleft = datestr(timeleftsecs/(24*60*60), 'DD:HH:MM:SS.FFF')  
+    % Print out the estimated time left.
+    estimatedtimeleft = datestr(timeleftsecs/(24*60*60), 'DD:HH:MM:SS.FFF')
     
 end
 
 % Put all the data into a table.
-data = table(states,robustnessmatrix,inequalitymatrix,dimensionmatrix,bestdimensionmatrix,dimdiffmatrix,classicalboundmatrix,quantumboundmatrix,beststatematrix);
+data = table(states,robustnessmatrix,inequalitymatrix,dimensionmatrix,bestdimensionmatrix,dimdiffmatrix,classicalboundmatrix,quantumboundmatrix,bounddiffmatrix);
