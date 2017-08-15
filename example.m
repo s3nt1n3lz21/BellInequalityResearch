@@ -146,4 +146,13 @@ for row = 1:numrows
 end
 
 % Put all the data into a table.
+bounddiffmatrix = quantumboundmatrix-classicalboundmatrix;
 data = table(states,robustnessmatrix,inequalitymatrix,dimensionmatrix,bestdimensionmatrix,dimdiffmatrix,classicalboundmatrix,quantumboundmatrix,bounddiffmatrix);
+
+xfit = bounddiffmatrix;
+yfit = dimdiffmatrix;
+s = scatter(bounddiffmatrix,dimdiffmatrix);
+s.Marker = '.'; 
+xlabel('$S_{\mathcal{Q}}-S_{\mathcal{L}}$','Interpreter','Latex','FontSize',15);
+ylabel('$dim - dim_{max}$','Interpreter','Latex','FontSize',15);
+saveas(gcf,'dimvbound.png')

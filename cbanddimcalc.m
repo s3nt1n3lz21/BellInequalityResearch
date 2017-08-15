@@ -210,7 +210,7 @@ classdef cbanddimcalc < handle
                curprodterm = curprodterm*obj.detprobvalues(getdetprobindex(obj,party,obj.dvalues(party),obj.mvalues(party)));
            end
            % Then multiply by the prefactor. Note the other dvalues will stay zero and so not contribute.        
-           curprodterm = curprodterm*((-1)^(sum(obj.dvalues)));
+           curprodterm = curprodterm*((-1)^(sum(obj.dvalues)-length(obj.pmm)));
            % Add this contribution to the correlator to the array corrvalues and keep track how full the array is.  
            obj.corrvalues(obj.corrvaluesrows+1) = curprodterm;
            obj.corrvaluesrows = obj.corrvaluesrows + 1;

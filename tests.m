@@ -34,45 +34,36 @@ scenarios = [[2,2,2];[2,2,3];[3,2,2];[3,2,3]];
 numtests = size(scenarios,1);
 
 % Create an array to hold the estimated time taken for each test. deltat ~
-% 2^(nmd) * (m+1)^n.
+% 2^(nmd) * ((m+1)^n-1).
 estimatedtimes = zeros(1,numtests);
-numtestruns = 2;
-timesarray = zeros(numtestruns,numtests);
-for i2 = 1:numtestruns
+calctimes = zeros(1,numtests);
     for i1 = 1:numtests
         coefflist = cell2mat(listofcoefflist(i1));
         scenario = scenarios(i1,:);
         n = scenario(1);
         d = scenario(2);
         m = scenario(3);
-        t1 = clock;
-        [dimension,classicalbound] = calcdimandclassicalbound(n,d,m,coefflist);
-        t2 = clock;
-        numsecs = etime(t2,t1);
-        timesarray(i2,i1) = log2(1000*numsecs)
-        estimatedtime =  n*(m*d+log2(m+1));
+        f = @() calcdimandclassicalbound(n,d,m,coefflist);
+        t = timeit(f,2)
+        nnzterms = nnz(coefflist);
+        fractionfull = nnzterms/(((m+1)^n)-1);
+        numsecs = t/fractionfull;
+        calctimes(i1) = log2(1000*numsecs)
+        estimatedtime =  log2((2^(n*m*d))*(((m+1)^n)-1)*((m/(m+1))^2)*d);
         estimatedtimes(i1) = estimatedtime
-    %     log2(n*m*d)
     end
-end
-averagetimes = mean(timesarray,1)
-%% 
+%%
 
 % Calculate a least squares fit and plot the data and the fit.
-p = polyfit(estimatedtimes,averagetimes,1)
+p = polyfit(estimatedtimes,calctimes,1)
 xfit = linspace(min(estimatedtimes),max(estimatedtimes));
 yfit = polyval(p,xfit);
-s = scatter(estimatedtimes,averagetimes);
+s = scatter(estimatedtimes,calctimes);
 s.Marker = '.'; 
-xlabel('log_{2}(2^{nmd}(m+1)^{n})');
-ylabel('log_{2}(\Deltat)');
+xlabel('$\log_{2}(2^{nmd}((m+1)^{n}-1)(\frac{m}{m+1})^{2}d$','Interpreter','Latex','FontSize',15);
+ylabel('$\log_{2}(\frac{\Delta{t}}{k})$','Interpreter','Latex','FontSize',15);
 hold on
 p = plot(xfit,yfit);
 p.Color = 'green';
 hold off
-savefig('Timings.fig')
-
-% f = @() myComputeFunction; % handle to function
-% timeit(f)
-% Look at better ways of timing the algorithm, i.e cputime not matlab time
-% etc..
+saveas(gcf,'timings.png')
