@@ -49,21 +49,21 @@ calctimes = zeros(1,numtests);
         fractionfull = nnzterms/(((m+1)^n)-1);
         numsecs = t/fractionfull;
         calctimes(i1) = log2(1000*numsecs)
-        estimatedtime =  log2((2^(n*m*d))*(((m+1)^n)-1)*((m/(m+1))^2)*d);
+        estimatedtime =  log2((d^(n*m))*(((m+1)^n)-1)*((m/(m+1))^2)*d);
         estimatedtimes(i1) = estimatedtime
     end
 %%
 
 % Calculate a least squares fit and plot the data and the fit.
-p = polyfit(estimatedtimes,calctimes,1)
+[p,s] = polyfit(estimatedtimes,calctimes,1)
 xfit = linspace(min(estimatedtimes),max(estimatedtimes));
-yfit = polyval(p,xfit);
+[yfit,yfiterr] = polyval(p,xfit,s);
 s = scatter(estimatedtimes,calctimes);
 s.Marker = '.'; 
-xlabel('$\log_{2}(2^{nmd}((m+1)^{n}-1)(\frac{m}{m+1})^{2}d$','Interpreter','Latex','FontSize',15);
-ylabel('$\log_{2}(\frac{\Delta{t}}{k})$','Interpreter','Latex','FontSize',15);
+xlabel('$\log_{2}\left(d^{nm}\left(\left(m+1\right)^{n}-1\right)\left(\frac{m}{m+1}\right)^{2}d\right)$','Interpreter','Latex','FontSize',15);
+ylabel('$\log_{2}\left(\frac{\Delta{t}}{k}\right)$','Interpreter','Latex','FontSize',15);
 hold on
-p = plot(xfit,yfit);
+p = plot(xfit,[yfit;yfit-yfiterr;yfit+yfiterr]);
 p.Color = 'green';
 hold off
 saveas(gcf,'timings.png')

@@ -8,6 +8,8 @@ classdef cbanddimcalc < handle
       m
       % The number of single party deterministic probabilities.
       numvars
+      % The array to hold the di values of each constraint equation that are 1.
+      indexarray
       % The maximum possible dimension of the bell inequality is an estimate of
       % the maximum number of ways of getting smax, and so the memory allocated.
       maxdim
@@ -57,10 +59,13 @@ classdef cbanddimcalc < handle
          obj.numvars = n*m*d;
          obj.corrcoefflist = corrcoefflist;
          obj.detprobvalues = zeros(1,obj.numvars);
-         obj.detprobsgivesmax = zeros(obj.maxdim,n*m*d);
+         %Make detprobsgivesmax dynamic but specify an upper bound.
+         obj.detprobsgivesmax = zeros(obj.d^(obj.n*obj.m),obj.numvars);
+         coder.varsize('obj.detprobsgivesmax',[obj.d^(obj.n*obj.m),obj.numvars]);
          obj.detprobsrows = 0;
          obj.smax = 'x';
          obj.dvalues = zeros(1,n);
+         obj.indexarray = zeros(1,(n*m));
          listsize = size(corrcoefflist);
          if not(listsize == (m+1)^n)
             fprintf("Error, the dimension of the correlator coefficient list does not match the scenario\n The dimension is %.0f when it should be %.0f",size(corrcoefflist,2),(m+1)^n)
@@ -68,7 +73,7 @@ classdef cbanddimcalc < handle
       end
       function [dim,smax] = calc(obj)
       % CALC Calculate the dimension and classical bound.
-       loopdetprobs(obj,obj.numvars);
+       loopdetprobs(obj,obj.n*obj.m);
        % Calculate the probability distribution vectors from determinsitic
        % probability array.
        probdistsgivesmax = calcprobdists(obj);
@@ -83,8 +88,8 @@ classdef cbanddimcalc < handle
           % If there is a still a deterministic probability to loop over then loop
           % over its possible values.
           if varstoloop >= 1
-               for value = 0:1
-                  obj.detprobvalues(varstoloop) = value;
+               for value = 1:obj.d
+                  obj.indexarray(varstoloop) = value;
                   % Then loop over the rest by calling the function again, with one less variable to loop over.    
                   loopdetprobs(obj,varstoloop-1);
                end
@@ -94,44 +99,25 @@ classdef cbanddimcalc < handle
           % deterministic probabilities.
           else
 
-              % First check that for this particular arrangement of probabilities, the normalization and no-signalling 
-              % contraints are obeyed. Use a flag "constraintsobeyed" to check whether they are obeyed, initialise this to true.        
-              constraintsobeyed = true;
-              % For each possible choice of ni and mi check the sum of the outcomes is unity. i.e The sum over di of D_ni(di|mi) = 1 
-              for ni = 1: obj.n
-                  % If at any point the constaints are not obeyed then stop carrying on to check that they are obeyed.           
-                  if not(constraintsobeyed)
-                      break;
-                  else
-                      for mi = 1: obj.m
-                          % If at any point the constaints are not obeyed then stop carrying on to check that they are obeyed.
-                          if not(constraintsobeyed)
-                              break;
-                          else
-                              % Check that the constaints are obeyed.                        
-                              constraintexpression = 0;
-                              for di = 1: obj.d
-                                  constraintexpression = constraintexpression + obj.detprobvalues(getdetprobindex(obj,ni,di,mi));
-                              end
-                              if not(constraintexpression == 1)
-                                  constraintsobeyed = false;
-                              end
-                          end
-                      end
-                  end
-              end
-            % If the constraints are obeyed then continue with the calculation.            
-            if constraintsobeyed
-                % Initialise the value of the expression to be 0.                
+                % Initialise the value of the expression to be 0 and get the values of the variables from the indexes.         
                 s = 0;
+                obj.detprobvalues = zeros(1,obj.numvars);
+                for ni = 1:obj.n
+                    for mi = 1:obj.m
+                    dindex =  (ni-1)*obj.m+mi;
+                    di = obj.indexarray(dindex);
+                    obj.detprobvalues(getdetprobindex(obj,ni,di,mi)) = 1;
+                    end
+                end
+                
                 % For each term in the correlator coefficient list calculate the corresponding correlator. e.g <m1 m2>          
-                for i1 = 1:numel(obj.corrcoefflist)
-                    coeff = obj.corrcoefflist(i1);
+                for i2 = 1:numel(obj.corrcoefflist)
+                    coeff = obj.corrcoefflist(i2);
                     % If the coefficient is zero then just skip the calculation otherwise continue. 
                     if not(coeff) == 0           
                         % Get the correct measurement settings (e.g m1 and m2) from how far into
                         % the correlator coefficient list we are.
-                        obj.mvalues = dec2base(i1-1,obj.m+1,obj.n)-'0';
+                        obj.mvalues = dec2base(i2-1,obj.m+1,obj.n)-'0';
                         % Find which of the parties do make measurements as this affects the form of the expression to be calculated. 
                         % If k parties make measurements then there will be k products of variables.            
                         obj.pmm = find(obj.mvalues);
@@ -162,7 +148,10 @@ classdef cbanddimcalc < handle
                      % probabilities that give smax with this new value.
                      if (s > 1.0001*obj.smax)
                        obj.smax = s;
-                       obj.detprobsgivesmax = zeros(obj.maxdim,obj.numvars);
+                       clear obj.detprobsgivesmax
+                       obj.detprobsgivesmax = zeros(obj.d^(obj.n*obj.m),obj.numvars);
+                       coder.varsize('obj.detprobsgivesmax',[obj.d^(obj.n*obj.m),obj.numvars]);
+%                        obj.detprobsgivesmax = zeros(obj.maxdim,obj.numvars);
                        obj.detprobsgivesmax(1,:) = obj.detprobvalues;
                        obj.detprobsrows = 1;
 
@@ -176,13 +165,7 @@ classdef cbanddimcalc < handle
                      else
                       
                      end    
-                end
-                
-            % If the constaints are not obeyed for this particular combination of deterministic probabilities 
-            % then don't do anything, just continue to the next loop.
-            else
-
-            end
+                end  
           end
       end
       function index = getdetprobindex(obj,ni,di,mi)
@@ -202,15 +185,17 @@ classdef cbanddimcalc < handle
            end
        % If there are no more to loop over then calculate the current contribution to this correlator.    
        else
-           curprodterm = 1;
            % The expression will take the form of k products of probabilities if there
            % are k parties that make measurements. For each party that does make
            % measurements calculate the corresponding product.
-           for party = obj.pmm
-               curprodterm = curprodterm*obj.detprobvalues(getdetprobindex(obj,party,obj.dvalues(party),obj.mvalues(party)));
+           prodterms = zeros(1,length(obj.pmm));
+           for i1 = 1:length(obj.pmm)
+               party = obj.pmm(i1);
+               prodterms(i1) = obj.detprobvalues(getdetprobindex(obj,party,obj.dvalues(party),obj.mvalues(party)));
            end
+           curprodterm = prod(prodterms)*((-1)^(sum(obj.dvalues)-length(obj.pmm)));
            % Then multiply by the prefactor. Note the other dvalues will stay zero and so not contribute.        
-           curprodterm = curprodterm*((-1)^(sum(obj.dvalues)-length(obj.pmm)));
+%            curprodterm = curprodterm*((-1)^(sum(obj.dvalues)-length(obj.pmm)));
            % Add this contribution to the correlator to the array corrvalues and keep track how full the array is.  
            obj.corrvalues(obj.corrvaluesrows+1) = curprodterm;
            obj.corrvaluesrows = obj.corrvaluesrows + 1;
@@ -250,10 +235,11 @@ classdef cbanddimcalc < handle
               end
           % Otherwise calculate the current probability term in the probability distribution vector.          
           else
-              curprodterm = 1;
+              prodterms = zeros(1,obj.n);
               for party = 1:obj.n
-                  curprodterm = curprodterm*obj.detprobs(getdetprobindex(obj,party,obj.darray(party),obj.marray(party)));
+                  prodterms(party) = obj.detprobs(getdetprobindex(obj,party,obj.darray(party),obj.marray(party)));
               end
+              curprodterm = prod(prodterms);
               obj.probdist(obj.probdistelements+1) = curprodterm;
               obj.probdistelements = obj.probdistelements + 1;
           end
@@ -261,8 +247,9 @@ classdef cbanddimcalc < handle
       function [dim] = calcdim(~,probdistsgivesmax)
       % CALCDIM Calculate the dimension of the bell inequality from the
       % probability distributions that give the classical bound.
-      reducedmatrix = rref(probdistsgivesmax);
-      dim = rank(reducedmatrix);
+%       reducedmatrix = rref(probdistsgivesmax);
+%       dim = rank(reducedmatrix);
+          dim = rank(probdistsgivesmax); 
       end
    end
 end
