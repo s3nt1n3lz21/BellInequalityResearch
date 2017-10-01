@@ -63,7 +63,6 @@ s.Marker = '.';
 xlabel('$\log_{2}\left(d^{nm}\left(\left(m+1\right)^{n}-1\right)\left(\frac{m}{m+1}\right)^{2}d\right)$','Interpreter','Latex','FontSize',15);
 ylabel('$\log_{2}\left(\frac{\Delta{t}}{k}\right)$','Interpreter','Latex','FontSize',15);
 hold on
-p = plot(xfit,[yfit;yfit-yfiterr;yfit+yfiterr]);
-p.Color = 'green';
+plot(xfit,yfit,['--',[],'g'])
 hold off
 saveas(gcf,'timings.png')

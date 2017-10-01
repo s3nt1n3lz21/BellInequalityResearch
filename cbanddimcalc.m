@@ -193,9 +193,8 @@ classdef cbanddimcalc < handle
                party = obj.pmm(i1);
                prodterms(i1) = obj.detprobvalues(getdetprobindex(obj,party,obj.dvalues(party),obj.mvalues(party)));
            end
+           % Then multiply by the prefactor. Note the other dvalues will stay zero and so not contribute.
            curprodterm = prod(prodterms)*((-1)^(sum(obj.dvalues)-length(obj.pmm)));
-           % Then multiply by the prefactor. Note the other dvalues will stay zero and so not contribute.        
-%            curprodterm = curprodterm*((-1)^(sum(obj.dvalues)-length(obj.pmm)));
            % Add this contribution to the correlator to the array corrvalues and keep track how full the array is.  
            obj.corrvalues(obj.corrvaluesrows+1) = curprodterm;
            obj.corrvaluesrows = obj.corrvaluesrows + 1;
@@ -247,9 +246,7 @@ classdef cbanddimcalc < handle
       function [dim] = calcdim(~,probdistsgivesmax)
       % CALCDIM Calculate the dimension of the bell inequality from the
       % probability distributions that give the classical bound.
-%       reducedmatrix = rref(probdistsgivesmax);
-%       dim = rank(reducedmatrix);
-          dim = rank(probdistsgivesmax); 
+      dim = rank(probdistsgivesmax); 
       end
    end
 end
