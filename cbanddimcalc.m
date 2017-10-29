@@ -101,6 +101,9 @@ classdef cbanddimcalc < handle
 
                 % Initialise the value of the expression to be 0 and get the values of the variables from the indexes.         
                 s = 0;
+                if obj.smax == 8
+                    s = 0;
+                end 
                 obj.detprobvalues = zeros(1,obj.numvars);
                 for ni = 1:obj.n
                     for mi = 1:obj.m
@@ -109,8 +112,9 @@ classdef cbanddimcalc < handle
                     obj.detprobvalues(getdetprobindex(obj,ni,di,mi)) = 1;
                     end
                 end
-                
-                % For each term in the correlator coefficient list calculate the corresponding correlator. e.g <m1 m2>          
+
+                % For each term in the correlator coefficient list calculate the corresponding correlator. e.g <m1 m2>    
+                %tempsarray = zeros(16,81);
                 for i2 = 1:numel(obj.corrcoefflist)
                     coeff = obj.corrcoefflist(i2);
                     % If the coefficient is zero then just skip the calculation otherwise continue. 
@@ -135,9 +139,12 @@ classdef cbanddimcalc < handle
                         % Once all of the correlator values have been calculated calculate the sum and then add this to value of the expression 
                         % first multiplying by the corresponding coefficient in the correlator coefficient list.                        
                         currentcorr = sum(obj.corrvalues);
+                        %obj.corrvalues;
+                        %tempsarray(:,i2) = obj.corrvalues;
                         s = s + coeff*currentcorr;
                     end
                 end
+                %tempsarray;
                 % If smax is not yet defined then set the value of smax and the array of deterministic probabilities that give smax. 
                 if obj.smax == 'x'
                   obj.smax = s;
