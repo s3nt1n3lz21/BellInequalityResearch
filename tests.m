@@ -3,10 +3,12 @@
 % literature. So far the algorithm works for all but the n = 4 tests.
 
 % Test 1: Expected dimension: 8 Expected Bound: 2
-% [dimension,classicalbound] = calcdimandclassicalbound(2,2,2,[0 0 0 0 1 1 0 1 -1])
+% coefflist(1,:) = {[0]}; coefflist(2,:) = {[0 0]}; coefflist(3,:) = {[0 0]}; coefflist(4,:) = {[0 0]}; coefflist(5,:) = {[1 -1 -1 1]}; coefflist(6,:) = {[1 -1 -1 1]}; coefflist(7,:) = {[0 0]}; coefflist(8,:) = {[1 -1 -1 1]}; coefflist(9,:) = {[-1 1 1 -1]};
+% [dimension,classicalbound] = calcdimandclassicalbound(2,2,2,coefflist)
 
 % Test 2: Expected dimension: 15 Expected Bound: 4
-% [dimension,classicalbound] = calcdimandclassicalbound(2,2,3,[0 1 1 0 1 -1 -1 1 1 -1 -1 -1 0 1 -1 0])
+% coefflist(1,:) = {[0]}; coefflist(2,:) = {[1 -1]}; coefflist(3,:) = {[1 -1]}; coefflist(4,:) = {[0 0]}; coefflist(5,:) = {[1 -1]}; coefflist(6,:) = {[-1 1 1 -1]}; coefflist(7,:) = {[-1 1 1 -1]}; coefflist(8,:) = {[1 -1 -1 1]}; coefflist(9,:) = {[1 -1]}; coefflist(10,:) = {[-1 1 1 -1]}; coefflist(11,:) = {[-1 1 1 -1]}; coefflist(12,:) = {[-1 1 1 -1]}; coefflist(13,:) = {[0 0]}; coefflist(14,:) = {[1 -1 -1 1]}; coefflist(15,:) = {[-1 1 1 -1]}; coefflist(16,:) = {[0 0 0 0]};
+% [dimension,classicalbound] = calcdimandclassicalbound(2,2,3,coefflist)
 
 % Test 3: Expected dimension: 26 Expected Bound: 6
 % [dimension,classicalbound] = calcdimandclassicalbound(3,2,2,[+0 +0 +2 +0 +1 -1 +2 -1 -1 +0 +1 -1 +1 -1 -2 -1 -2 +1 +2 -1 -1 -1 -2 +1 -1 +1 +2])
@@ -25,6 +27,10 @@
 
 % Test 8: Expected dimension: 242 Expected Bound: 2
 % [dimension,classicalbound] = calcdimandclassicalbound(5,2,2,[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1])
+
+%OLD
+% [dimension,classicalbound] = calcdimandclassicalbound(2,2,2,[0 0 0 0 1 1 0 1 -1])
+% [dimension,classicalbound] = calcdimandclassicalbound(2,2,3,[0 1 1 0 1 -1 -1 1 1 -1 -1 -1 0 1 -1 0])
 
 % Code to test the timings of the algorithm using these test states, here
 % only the test states that the algorithm succeeded producing the correct

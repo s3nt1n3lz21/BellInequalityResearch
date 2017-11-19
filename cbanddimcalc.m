@@ -14,7 +14,7 @@ classdef cbanddimcalc < handle
       % the maximum number of ways of getting smax, and so the memory allocated.
       maxdim
       % The correlator coefficient list.  
-      corrcoefflist
+      coefflist
       % The array of the current values of the single party deterministic probabilities.      
       detprobvalues
       % The current maximum found so far.
@@ -23,17 +23,6 @@ classdef cbanddimcalc < handle
       detprobsgivesmax
       % How many rows full is the array of deterministic probabilities (not the number of rows).     
       detprobsrows
-      % An array to hold the current measurement settings.      
-      mvalues
-      % An array used in calccorr to hold the values of the measurement outcomes d for each party as it loops over them.     
-      dvalues
-      % An array used in calccorr to hold all of the correlator terms which it
-      % calculates.
-      corrvalues
-      % current correlator term for the (Parties that Make Measurements).
-      pmm
-      % How full is the array of corrvalues.
-      corrvaluesrows
       % An array used in calcprobdists to hold the current values of the possible
       % outcomes.
       darray
@@ -50,23 +39,22 @@ classdef cbanddimcalc < handle
       probdistelements
    end
    methods       
-      function obj = cbanddimcalc(n,d,m,corrcoefflist)
+      function obj = cbanddimcalc(n,d,m,coefflist)
          % CBANDDIMCALC Constructor function to the initialise properties.      
          obj.maxdim = ((m*(d-1)+1)^n) - 1;
          obj.n = n;
          obj.d = d;
          obj.m = m;
          obj.numvars = n*m*d;
-         obj.corrcoefflist = corrcoefflist;
+         obj.coefflist = coefflist;
          obj.detprobvalues = zeros(1,obj.numvars);
          %Make detprobsgivesmax dynamic but specify an upper bound.
          obj.detprobsgivesmax = zeros(obj.d^(obj.n*obj.m),obj.numvars);
          coder.varsize('obj.detprobsgivesmax',[obj.d^(obj.n*obj.m),obj.numvars]);
          obj.detprobsrows = 0;
          obj.smax = 'x';
-         obj.dvalues = zeros(1,n);
          obj.indexarray = zeros(1,(n*m));
-         listsize = size(corrcoefflist);
+         listsize = size(coefflist,1);
          if not(listsize == (m+1)^n)
             fprintf("Error, the dimension of the correlator coefficient list does not match the scenario\n The dimension is %.0f when it should be %.0f",size(corrcoefflist,2),(m+1)^n)
          end
@@ -100,10 +88,6 @@ classdef cbanddimcalc < handle
           else
 
                 % Initialise the value of the expression to be 0 and get the values of the variables from the indexes.         
-                s = 0;
-                if obj.smax == 8
-                    s = 0;
-                end 
                 obj.detprobvalues = zeros(1,obj.numvars);
                 for ni = 1:obj.n
                     for mi = 1:obj.m
@@ -113,35 +97,45 @@ classdef cbanddimcalc < handle
                     end
                 end
 
-                % For each term in the correlator coefficient list calculate the corresponding correlator. e.g <m1 m2>    
-                %tempsarray = zeros(16,81);
-                for i2 = 1:numel(obj.corrcoefflist)
-                    coeff = obj.corrcoefflist(i2);
-                    % If the coefficient is zero then just skip the calculation otherwise continue. 
-                    if not(coeff) == 0           
-                        % Get the correct measurement settings (e.g m1 and m2) from how far into
-                        % the correlator coefficient list we are.
-                        obj.mvalues = dec2base(i2-1,obj.m+1,obj.n)-'0';
-                        % Find which of the parties do make measurements as this affects the form of the expression to be calculated. 
-                        % If k parties make measurements then there will be k products of variables.            
-                        obj.pmm = find(obj.mvalues);
-                        % The NUMber of Parties that Make Measurements is the number of outcome variables di we have to loop over.              
-                        numpmm = length(obj.pmm);
-
-                        % Initialise the outcome variables, the array of correlator values and numbers of rows it is full before each calculation.  
-                        obj.dvalues = zeros(1,obj.n);
-                        obj.corrvalues = zeros((obj.d)^(numpmm),1);
-                        obj.corrvaluesrows = 0;
-                        
-                        % Now calculate the correlator of the measurements (e.g m1 and m2) by looping with recursion.                       
-                        calccorr(obj,numpmm);
-                        
-                        % Once all of the correlator values have been calculated calculate the sum and then add this to value of the expression 
-                        % first multiplying by the corresponding coefficient in the correlator coefficient list.                        
-                        currentcorr = sum(obj.corrvalues);
-                        %obj.corrvalues;
-                        %tempsarray(:,i2) = obj.corrvalues;
-                        s = s + coeff*currentcorr;
+                s = 0;
+                % For each term in the coefficient list calculate the corresponding contribution from that probability. e.g coeff*prob    
+                for i2 = 1:size(obj.coefflist,1)
+                    % Get the correct measurement settings (e.g m1 and m2) from how far into the coefficient list we are.
+                    mvalues = dec2base(i2-1,obj.m+1,obj.n)-'0';
+                    % Find which of the Parties do Make Measurements (PMM) as this affects the form of the probability to be calculated. 
+                    % If k parties make measurements then there will be k products of variables.            
+                    pmm = find(mvalues);
+                    numpmm=length(pmm);
+                    
+                    cellsz = cellfun(@size, obj.coefflist(i2,:),'uni',false);
+                    cellsize = cell2mat(cellsz);
+                    lengthvar = cellsize(2);
+                    i2
+                    for i3 = 1:lengthvar
+                        var = obj.coefflist{i2,1,1};
+                        coeff = var(i3);
+                        % If the coefficient is zero then just skip the calculation otherwise continue. 
+                        if not(coeff) == 0           
+                            i3
+                            obj.d;
+                            numpmm;
+                            % get the values of the outcomes observed from the values of i3 and the parties that make measurements.  
+                            dvaluespmm = (dec2base(i3-1,obj.d,numpmm)+1)-'0';
+                            dvalues = zeros(1,obj.n);
+                            counter = 1;
+                            %Add zeros back in to dvalues
+                            for party = 1:obj.n
+                                if ismember(party, pmm(:))
+                                    dvalues(party) = pmm(counter);
+                                    counter = counter + 1;
+                                else
+                                    dvalues(party) = 0;
+                                end
+                            end
+                            % Now calculate the probability from the current location in the list i2,i3               
+                            prob = calcprob(obj,pmm,mvalues,dvalues);                     
+                            s = s + coeff*prob;
+                        end
                     end
                 end
                 %tempsarray;
@@ -179,33 +173,19 @@ classdef cbanddimcalc < handle
           % GETDETPROBINDEX Calculates the index of the deterministic probability with D_ni(di,mi) within the array of deterministic probabilities.          
           index = (ni-1)*obj.d*obj.m+(di-1)*obj.m+mi; 
       end
-      function calccorr(obj,varstoloop)
-      % CALCCORR Calculates the correlator of a set of measurements (e.g <m1 m2>).
+      function prob = calcprob(obj,pmm,mvalues,dvalues)
+      % CALCPROB Calculates the probability P(d1d2..dn|m1m2...mn)
       
-      % If there are still outcome variables to loop over, then loop over them. Only loop over the possible outcomes
-      % of the parties that make measurements.
-       if varstoloop >= 1   
-           for dvalue = 1: obj.d              
-               obj.dvalues(obj.pmm(varstoloop)) = dvalue;
-               % Then call the function again with one less variable to loop over.               
-               calccorr(obj,varstoloop-1);
+           % The expression will take the form of k products of probabilities if there are k parties that make measurements. 
+           %For each party that does make measurements calculate the corresponding product.
+           % The NUMber of Parties that Make Measurements is the number of outcome variables di we have to loop over.              
+           numpmm = length(pmm)
+           prodterms = zeros(1,numpmm)
+           for i1 = 1:numpmm
+               party = pmm(i1)
+               prodterms(i1) = obj.detprobvalues(getdetprobindex(obj,party,dvalues(party),mvalues(party)))
            end
-       % If there are no more to loop over then calculate the current contribution to this correlator.    
-       else
-           % The expression will take the form of k products of probabilities if there
-           % are k parties that make measurements. For each party that does make
-           % measurements calculate the corresponding product.
-           prodterms = zeros(1,length(obj.pmm));
-           for i1 = 1:length(obj.pmm)
-               party = obj.pmm(i1);
-               prodterms(i1) = obj.detprobvalues(getdetprobindex(obj,party,obj.dvalues(party),obj.mvalues(party)));
-           end
-           % Then multiply by the prefactor. Note the other dvalues will stay zero and so not contribute.
-           curprodterm = prod(prodterms)*((-1)^(sum(obj.dvalues)-length(obj.pmm)));
-           % Add this contribution to the correlator to the array corrvalues and keep track how full the array is.  
-           obj.corrvalues(obj.corrvaluesrows+1) = curprodterm;
-           obj.corrvaluesrows = obj.corrvaluesrows + 1;
-       end
+           prob = prod(prodterms);
       end
       function [probdistsgivesmax] = calcprobdists(obj)
       % CALCPROBDISTS Calculate the probability distribution vectors that give
