@@ -4,8 +4,8 @@ classdef cbanddimcalc < handle
    properties      
       % The number of parties n, measurement outcomes d and measurement settings m. Here they are assumed to all be the same.      
       n
-      d
-      m
+      %d
+      %m
       % The number of single party deterministic probabilities.
       numvars
       % The array to hold the di values of each constraint equation that are 1.
@@ -37,23 +37,72 @@ classdef cbanddimcalc < handle
       probdist
       % How full is the vector probdist
       probdistelements
+      % The list of the total number of possible outcomes for each measurement of each party 
+      dlist
+      % A vector form of the dlist
+      dveclist
+      % The total number of possible measurements
+      totalNumMeas
    end
    methods       
-      function obj = cbanddimcalc(n,d,m,coefflist)
-         % CBANDDIMCALC Constructor function to the initialise properties.      
-         obj.maxdim = ((m*(d-1)+1)^n) - 1;
+      function obj = cbanddimcalc(n,dlist,coefflist)
+         % CBANDDIMCALC Constructor function to the initialise properties.
          obj.n = n;
-         obj.d = d;
-         obj.m = m;
-         obj.numvars = n*m*d;
+         obj.dlist = dlist;
+         % Calculate the spatial dimension of bell inequalities of this scenario
+         prodvals = zeros(1,size(dlist,1));
+         % The total number of deterministic probabilities
+         numvars = 0;
+         % An array used to calculate the maximum possible deterministic probabilities "maximumdetprobs"
+         tempvararray = zeros(1,n);
+         % The total number of possible measurements to be used later for "indexarray"
+         totalNumMeas = 0
+         for i1 = 1:size(dlist,1)
+            var = dlist{i1,1,1}
+
+            % Calculate the total number of deterministic probabilities
+            numvars = numvars + sum(var);
+            
+            prodvalue = 0;
+            tempvararray(i1) = sum(var) + 1;
+             
+            cellsz = cellfun(@size, dlist(i1,:),'uni',false);
+            cellsize = cell2mat(cellsz);
+            lengthvar = cellsize(2);
+            
+            % Calculate the total number of possible measurements to be used later for "indexarray"
+            totalNumMeas = totalNumMeas + lengthvar;
+            
+            if i1 == 1
+                dveclist = var;
+            else
+                dveclist = horzcat(dveclist,var);           
+            end           
+            
+            for i2 = 1:lengthvar
+                prodvalue = prodvalue + var(i2);
+            end
+            prodvalue = prodvalue - lengthvar + 1;
+            prodvals(i1) = prodvalue;
+                      
+         end                             
+         obj.maxdim = prod(prodvals) - 1
+         maximumdetprobs = prod(tempvararray)
+         
+         obj.dveclist = dveclist;
+         %obj.d = d;
+         %obj.m = m;
+         
+         obj.numvars = numvars;
+         obj.totalNumMeas = totalNumMeas;
          obj.coefflist = coefflist;
          obj.detprobvalues = zeros(1,obj.numvars);
          %Make detprobsgivesmax dynamic but specify an upper bound.
-         obj.detprobsgivesmax = zeros(obj.d^(obj.n*obj.m),obj.numvars);
-         coder.varsize('obj.detprobsgivesmax',[obj.d^(obj.n*obj.m),obj.numvars]);
+         obj.detprobsgivesmax = zeros(maximumdetprobs,obj.numvars);
+         coder.varsize('obj.detprobsgivesmax',[maximumdetprobs,obj.numvars]);
          obj.detprobsrows = 0;
          obj.smax = 'x';
-         obj.indexarray = zeros(1,(n*m));
+         obj.indexarray = zeros(1,(totalNumMeas));
          %listsize = size(coefflist,1);
          %if not(listsize == (m+1)^n)
          %   fprintf("Error, the dimension of the correlator coefficient list does not match the scenario\n The dimension is %.0f when it should be %.0f",size(corrcoefflist,2),(m+1)^n)
@@ -61,7 +110,7 @@ classdef cbanddimcalc < handle
       end
       function [dim,smax] = calc(obj)
       % CALC Calculate the dimension and classical bound.
-       loopdetprobs(obj,obj.n*obj.m);
+       loopdetprobs(obj,obj.totalNumMeas);
        % Calculate the probability distribution vectors from determinsitic
        % probability array.
        probdistsgivesmax = calcprobdists(obj);
@@ -76,7 +125,8 @@ classdef cbanddimcalc < handle
           % If there is a still a deterministic probability to loop over then loop
           % over its possible values.
           if varstoloop >= 1
-               for value = 1:obj.d
+               maxdvalue = obj.dveclist(varstoloop) %%%%%%%%%%%%Does the order matter?
+               for value = 1:maxdvalue
                   obj.indexarray(varstoloop) = value;
                   % Then loop over the rest by calling the function again, with one less variable to loop over.    
                   loopdetprobs(obj,varstoloop-1);
@@ -89,11 +139,15 @@ classdef cbanddimcalc < handle
 
                 % Initialise the value of the expression to be 0 and get the values of the variables from the indexes.         
                 obj.detprobvalues = zeros(1,obj.numvars);
-                for ni = 1:obj.n
-                    for mi = 1:obj.m
-                    dindex =  (ni-1)*obj.m+mi;
-                    di = obj.indexarray(dindex);
-                    obj.detprobvalues(getdetprobindex(obj,ni,di,mi)) = 1;
+                dindex = 0;
+                for party = 1:obj.n
+                    cellsz = cellfun(@size, obj.dlist(party,:),'uni',false);
+                    cellsize = cell2mat(cellsz);
+                    lengthvar = cellsize(2);
+                    for mi = 1:lengthvar
+                        dindex = dindex + 1
+                        di = obj.indexarray(dindex)
+                        obj.detprobvalues(getdetprobindex(obj,party,di,mi)) = 1
                     end
                 end
 
@@ -167,8 +221,26 @@ classdef cbanddimcalc < handle
           end
       end
       function index = getdetprobindex(obj,ni,di,mi)
-          % GETDETPROBINDEX Calculates the index of the deterministic probability with D_ni(di,mi) within the array of deterministic probabilities.          
-          index = (ni-1)*obj.d*obj.m+(di-1)*obj.m+mi; 
+          % GETDETPROBINDEX Calculates the index of the deterministic probability with D_ni(di,mi) within the array of deterministic probabilities.    
+          index = 0;
+          for i1 = 1:ni-1
+            var = obj.dlist{i1,1,1};
+            index = index + sum(var);
+          end  
+            
+          %cellsz = cellfun(@size, dlist(i1,:),'uni',false);
+          %cellsize = cell2mat(cellsz);
+          %lengthvar = cellsize(2);
+          
+          var = obj.dlist{ni,1,1};
+            
+          for i2 = 1:mi-1
+            index = index + var(i2);
+          end
+          
+          index = index + di;
+          
+          %index = (ni-1)*obj.d*obj.m+(di-1)*obj.m+mi; %%%AS VECTOR ORDERS THEM BY N then D then M this is not correct?
       end
       function prob = calcprob(obj,pmm,mvalues,dvalues)
       % CALCPROB Calculates the probability P(d1d2..dn|m1m2...mn)
