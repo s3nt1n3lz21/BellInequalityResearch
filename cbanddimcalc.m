@@ -54,10 +54,10 @@ classdef cbanddimcalc < handle
          obj.detprobsrows = 0;
          obj.smax = 'x';
          obj.indexarray = zeros(1,(n*m));
-         listsize = size(coefflist,1);
-         if not(listsize == (m+1)^n)
-            fprintf("Error, the dimension of the correlator coefficient list does not match the scenario\n The dimension is %.0f when it should be %.0f",size(corrcoefflist,2),(m+1)^n)
-         end
+         %listsize = size(coefflist,1);
+         %if not(listsize == (m+1)^n)
+         %   fprintf("Error, the dimension of the correlator coefficient list does not match the scenario\n The dimension is %.0f when it should be %.0f",size(corrcoefflist,2),(m+1)^n)
+         %end
       end
       function [dim,smax] = calc(obj)
       % CALC Calculate the dimension and classical bound.
@@ -110,15 +110,12 @@ classdef cbanddimcalc < handle
                     cellsz = cellfun(@size, obj.coefflist(i2,:),'uni',false);
                     cellsize = cell2mat(cellsz);
                     lengthvar = cellsize(2);
-                    i2
+                    
                     for i3 = 1:lengthvar
                         var = obj.coefflist{i2,1,1};
                         coeff = var(i3);
                         % If the coefficient is zero then just skip the calculation otherwise continue. 
                         if not(coeff) == 0           
-                            i3
-                            obj.d;
-                            numpmm;
                             % get the values of the outcomes observed from the values of i3 and the parties that make measurements.  
                             dvaluespmm = (dec2base(i3-1,obj.d,numpmm)+1)-'0';
                             dvalues = zeros(1,obj.n);
@@ -126,7 +123,7 @@ classdef cbanddimcalc < handle
                             %Add zeros back in to dvalues
                             for party = 1:obj.n
                                 if ismember(party, pmm(:))
-                                    dvalues(party) = pmm(counter);
+                                    dvalues(party) = dvaluespmm(counter);
                                     counter = counter + 1;
                                 else
                                     dvalues(party) = 0;
