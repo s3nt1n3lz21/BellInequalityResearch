@@ -8,11 +8,12 @@
 % [dimension,classicalbound] = calcdimandclassicalbound(2,dlist,coefflist)
 
 % Test 2: Expected dimension: 15 Expected Bound: 4
+% dlist(1,:) = {[2,2,2]}; dlist(2,:) = {[2,2,2]};
 % coefflist(1,:) = {[0]}; coefflist(2,:) = {[1 -1]}; coefflist(3,:) = {[1 -1]}; coefflist(4,:) = {[0 0]}; coefflist(5,:) = {[1 -1]}; coefflist(6,:) = {[-1 1 1 -1]}; coefflist(7,:) = {[-1 1 1 -1]}; coefflist(8,:) = {[1 -1 -1 1]}; coefflist(9,:) = {[1 -1]}; coefflist(10,:) = {[-1 1 1 -1]}; coefflist(11,:) = {[-1 1 1 -1]}; coefflist(12,:) = {[-1 1 1 -1]}; coefflist(13,:) = {[0 0]}; coefflist(14,:) = {[1 -1 -1 1]}; coefflist(15,:) = {[-1 1 1 -1]}; coefflist(16,:) = {[0 0 0 0]};
-% [dimension,classicalbound] = calcdimandclassicalbound(2,2,3,coefflist)
+% [dimension,classicalbound] = calcdimandclassicalbound(2,dlist,coefflist)
 
 % Test 3: Expected dimension: 26 Expected Bound: 6
-% coefflist(1,:) = {[0]}; coefflist(2,:) = {[1 -1]}; coefflist(3,:) = {[1
+% coefflist(1,:) = {[0]}; coefflist(2,:) = {[0 0]}; coefflist(3,:) = {[1
 % -1]}; coefflist(4,:) = {[0 0]}; coefflist(5,:) = {[1 -1]}; coefflist(6,:)
 % = {[-1 1 1 -1]}; coefflist(7,:) = {[-1 1 1 -1]}; coefflist(8,:) = {[1 -1
 % -1 1]}; coefflist(9,:) = {[1 -1]}; coefflist(10,:) = {[-1 1 1 -1]};

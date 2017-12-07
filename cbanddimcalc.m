@@ -7,212 +7,255 @@ classdef cbanddimcalc < handle
       %d
       %m
       % The number of single party deterministic probabilities.
-      numvars
+      numVars
       % The array to hold the di values of each constraint equation that are 1.
-      indexarray
+      indexArray
       % The maximum possible dimension of the bell inequality is an estimate of
       % the maximum number of ways of getting smax, and so the memory allocated.
-      maxdim
+      maxDim
       % The correlator coefficient list.  
-      coefflist
+      coeffList
       % The array of the current values of the single party deterministic probabilities.      
-      detprobvalues
+      detProbValues
       % The current maximum found so far.
-      smax
+      sMax
       % The array of deterministic probabilities that give smax.      
-      detprobsgivesmax
+      detProbsGiveSMax
       % How many rows full is the array of deterministic probabilities (not the number of rows).     
-      detprobsrows
+      detProbsRows
       % An array used in calcprobdists to hold the current values of the possible
       % outcomes.
-      darray
+      dArray
       % An array used in calcprobdists to hold the current values of the
       % measurent settings.
-      marray
-      % An array used in calcprobdists to hold the current probability
-      % distribution.
-      detprobs
+      mArray
       % An array used to hold the current probability distribution in
-      % calcprobdists
-      probdist
+      % calcProbDists
+      probDist
       % How full is the vector probdist
-      probdistelements
+      probDistElements
       % The list of the total number of possible outcomes for each measurement of each party 
-      dlist
+      dList
       % A vector form of the dlist
-      dveclist
+      dVecList
       % The total number of possible measurements
       totalNumMeas
+      % The total length of each probability vector
+      maximumDetProbs
+      % The local deterministic probabilities as an array, each row is the
+      % local deterministic probabilities of one of the parties
+      dProbArray
+      % A list used in calcProbDist to hold the d values that are looped over
+      currDVals
+      % A counter used in CalcProbDist for the index of the current probability term in
+      % the probability distribution
+      probCounter
    end
    methods       
-      function obj = cbanddimcalc(n,dlist,coefflist)
+      function obj = cbanddimcalc(n,dList,coeffList)
          % CBANDDIMCALC Constructor function to the initialise properties.
          obj.n = n;
-         obj.dlist = dlist;
+         obj.dList = dList;
          % Calculate the spatial dimension of bell inequalities of this scenario
-         prodvals = zeros(1,size(dlist,1));
+         prodVals = zeros(1,size(dList,1));
          % The total number of deterministic probabilities
-         numvars = 0;
+         numVars = 0;
          % An array used to calculate the maximum possible deterministic probabilities "maximumdetprobs"
-         tempvararray = zeros(1,n);
+         tempVarArray = zeros(1,n);       
          % The total number of possible measurements to be used later for "indexarray"
-         totalNumMeas = 0
-         for i1 = 1:size(dlist,1)
-            var = dlist{i1,1,1}
+         totalNumMeas = 0;
+         for i1 = 1:size(dList,1)
+            var = dList{i1,1,1};
 
             % Calculate the total number of deterministic probabilities
-            numvars = numvars + sum(var);
+            numVars = numVars + sum(var);
             
-            prodvalue = 0;
-            tempvararray(i1) = sum(var) + 1;
-             
-            cellsz = cellfun(@size, dlist(i1,:),'uni',false);
-            cellsize = cell2mat(cellsz);
-            lengthvar = cellsize(2);
+            prodValue = 0;
+            tempVarArray(i1) = sum(var);
+            
+            cellSz = cellfun(@size, dList(i1,:),'uni',false);
+            cellSize = cell2mat(cellSz);
+            lengthVar = cellSize(2);
             
             % Calculate the total number of possible measurements to be used later for "indexarray"
-            totalNumMeas = totalNumMeas + lengthvar;
+            totalNumMeas = totalNumMeas + lengthVar;
             
             if i1 == 1
-                dveclist = var;
+                dVecList = var;
             else
-                dveclist = horzcat(dveclist,var);           
+                dVecList = horzcat(dVecList,var);           
             end           
             
-            for i2 = 1:lengthvar
-                prodvalue = prodvalue + var(i2);
+            for i2 = 1:lengthVar
+                prodValue = prodValue + var(i2);
             end
-            prodvalue = prodvalue - lengthvar + 1;
-            prodvals(i1) = prodvalue;
+            prodValue = prodValue - lengthVar + 1;
+            prodVals(i1) = prodValue;
                       
          end                             
-         obj.maxdim = prod(prodvals) - 1
-         maximumdetprobs = prod(tempvararray)
-         
-         obj.dveclist = dveclist;
+         obj.maxDim = prod(prodVals) - 1;
+         obj.maximumDetProbs = prod(tempVarArray);
+         obj.dVecList = dVecList;
          %obj.d = d;
          %obj.m = m;
          
-         obj.numvars = numvars;
+         obj.numVars = numVars;
          obj.totalNumMeas = totalNumMeas;
-         obj.coefflist = coefflist;
-         obj.detprobvalues = zeros(1,obj.numvars);
+         obj.coeffList = coeffList;
+         obj.detProbValues = zeros(1,obj.numVars);
          %Make detprobsgivesmax dynamic but specify an upper bound.
-         obj.detprobsgivesmax = zeros(maximumdetprobs,obj.numvars);
-         coder.varsize('obj.detprobsgivesmax',[maximumdetprobs,obj.numvars]);
-         obj.detprobsrows = 0;
-         obj.smax = 'x';
-         obj.indexarray = zeros(1,(totalNumMeas));
+         obj.detProbsGiveSMax = zeros(obj.maxDim,obj.numVars);
+         coder.varsize('obj.detProbsGiveSmax',[obj.maxDim,obj.numVars]);
+         obj.detProbsRows = 0;
+         obj.sMax = 'x';
+         obj.indexArray = zeros(1,obj.maxDim);
+         obj.dProbArray = {};
          %listsize = size(coefflist,1);
          %if not(listsize == (m+1)^n)
          %   fprintf("Error, the dimension of the correlator coefficient list does not match the scenario\n The dimension is %.0f when it should be %.0f",size(corrcoefflist,2),(m+1)^n)
          %end
       end
-      function [dim,smax] = calc(obj)
+      function [dim,sMax] = calc(obj)
       % CALC Calculate the dimension and classical bound.
-       loopdetprobs(obj,obj.totalNumMeas);
+       loopDetProbs(obj,obj.totalNumMeas);
        % Calculate the probability distribution vectors from determinsitic
        % probability array.
-       probdistsgivesmax = calcprobdists(obj);
+       sMax = obj.sMax;
+       probDistsGiveSMax = calcProbDists(obj);
        % Calculate the dimension.
-       dim = calcdim(obj,probdistsgivesmax);
-       smax = obj.smax;
+       dim = calcDim(obj,probDistsGiveSMax);    
       end
-      function loopdetprobs(obj,varstoloop)
+      function loopDetProbs(obj,varsToLoop)
       % LOOPDETPROBS The main algorithm to loop over the possible values of the
       % deterministic probabilities (0 or 1).
       
           % If there is a still a deterministic probability to loop over then loop
           % over its possible values.
-          if varstoloop >= 1
-               maxdvalue = obj.dveclist(varstoloop) %%%%%%%%%%%%Does the order matter?
-               for value = 1:maxdvalue
-                  obj.indexarray(varstoloop) = value;
+          if varsToLoop >= 1
+               maxDValue = obj.dVecList(obj.totalNumMeas-varsToLoop+1); %%%%%%%%%%%%Does the order matter?
+               for value = 1:maxDValue
+                  obj.indexArray(obj.totalNumMeas-varsToLoop+1) = value;
                   % Then loop over the rest by calling the function again, with one less variable to loop over.    
-                  loopdetprobs(obj,varstoloop-1);
+                  loopDetProbs(obj,varsToLoop-1);
                end
                
           % If there are no more deterministic probabilities to loop over then
           % calculate the Bell Inequality correlator for the current values of the
           % deterministic probabilities.
           else
-
                 % Initialise the value of the expression to be 0 and get the values of the variables from the indexes.         
-                obj.detprobvalues = zeros(1,obj.numvars);
-                dindex = 0;
+                obj.detProbValues = zeros(1,obj.numVars);
+                dIndex = 0;
                 for party = 1:obj.n
-                    cellsz = cellfun(@size, obj.dlist(party,:),'uni',false);
-                    cellsize = cell2mat(cellsz);
-                    lengthvar = cellsize(2);
-                    for mi = 1:lengthvar
-                        dindex = dindex + 1
-                        di = obj.indexarray(dindex)
-                        obj.detprobvalues(getdetprobindex(obj,party,di,mi)) = 1
+                    cellSz = cellfun(@size, obj.dList(party,:),'uni',false);
+                    cellSize = cell2mat(cellSz);
+                    lengthVar = cellSize(2);
+                    for mi = 1:lengthVar
+                        dIndex = dIndex + 1;
+                        di = obj.indexArray(dIndex);
+                        obj.detProbValues(getDetProbIndex(obj,party,di,mi)) = 1;
                     end
                 end
 
                 s = 0;
-                % For each term in the coefficient list calculate the corresponding contribution from that probability. e.g coeff*prob    
-                for i2 = 1:size(obj.coefflist,1)
-                    % Get the correct measurement settings (e.g m1 and m2) from how far into the coefficient list we are.
-                    mvalues = dec2base(i2-1,obj.m+1,obj.n)-'0';
+                             
+                % For each term in the coefficient list calculate the corresponding contribution from that probability. e.g coeff*prob
+                % Get the correct measurement settings (e.g m1 and m2) from how far into the coefficient list we are by firstcalculating the maximum m values.
+                mValues = cat(2,zeros(1,obj.n-1),[-1]);
+                maxMValues = zeros(1,obj.n);
+                for dIndex = 1:obj.n
+                    cellSz = cellfun(@size, obj.dList(dIndex,:),'uni',false);
+                    cellSize = cell2mat(cellSz);
+                    maxMValue = cellSize(2);
+                    maxMValues(dIndex) = maxMValue;
+                end    
+                for i2 = 1:size(obj.coeffList,1)
+                    % Get the correct measurement settings (e.g m1 and m2) from how far into the coefficient list we are
+                    %mvalues = dec2base(i2-1,obj.m+1,obj.n)-'0';
+
+                    for index = obj.n:-1:1
+                        if mValues(index) == maxMValues(index)
+                            mValues(index) = 0;
+                        else
+                            mValues(index) = mValues(index) + 1;
+                            break
+                        end
+                    end
+                    
                     % Find which of the Parties do Make Measurements (PMM) as this affects the form of the probability to be calculated. 
                     % If k parties make measurements then there will be k products of variables.            
-                    pmm = find(mvalues);
-                    numpmm=length(pmm);
+                    partiesMakeMeas = find(mValues);
+                    numPartiesMakeMeas=length(partiesMakeMeas);
                     
-                    cellsz = cellfun(@size, obj.coefflist(i2,:),'uni',false);
-                    cellsize = cell2mat(cellsz);
-                    lengthvar = cellsize(2);
+                    cellSz = cellfun(@size, obj.coeffList(i2,:),'uni',false);
+                    cellSize = cell2mat(cellSz);
+                    lengthVar = cellSize(2);
                     
-                    for i3 = 1:lengthvar
-                        var = obj.coefflist{i2,1,1};
+                    dValuesPMM = cat(2,ones(1,numPartiesMakeMeas-1),[0]);
+                    maxDValuesPMM = zeros(1,numPartiesMakeMeas);
+                    for dIndex = 1:numPartiesMakeMeas
+                        party = partiesMakeMeas(dIndex);  
+                        dvec = obj.dList{party,1,1};
+                        maxDValue = dvec(mValues(party));
+                        maxDValuesPMM(dIndex) = maxDValue;
+                    end
+                    for i3 = 1:lengthVar
+                        var = obj.coeffList{i2,1,1};
                         coeff = var(i3);
                         % If the coefficient is zero then just skip the calculation otherwise continue. 
-                        if not(coeff) == 0           
+                        if not(coeff) == 0
+                            for index = numPartiesMakeMeas:-1:1
+                                if dValuesPMM(index) == maxDValuesPMM(index)
+                                    dValuesPMM(index) = 1;
+                                else
+                                    dValuesPMM(index) = dValuesPMM(index) + 1;
+                                    break
+                                end
+                            end
                             % get the values of the outcomes observed from the values of i3 and the parties that make measurements.  
-                            dvaluespmm = (dec2base(i3-1,obj.d,numpmm)+1)-'0';
-                            dvalues = zeros(1,obj.n);
+                            dValues = zeros(1,obj.n);
                             counter = 1;
                             %Add zeros back in to dvalues
                             for party = 1:obj.n
-                                if ismember(party, pmm(:))
-                                    dvalues(party) = dvaluespmm(counter);
+                                if ismember(party, partiesMakeMeas(:))
+                                    dValues(party) = dValuesPMM(counter);
                                     counter = counter + 1;
                                 else
-                                    dvalues(party) = 0;
+                                    dValues(party) = 0;
                                 end
                             end
+                            %dvalues
                             % Now calculate the probability from the current location in the list i2,i3               
-                            prob = calcprob(obj,pmm,mvalues,dvalues);                     
+                            prob = calcProb(obj,partiesMakeMeas,mValues,dValues);                     
                             s = s + coeff*prob;
                         end
                     end
                 end
+                s;
                 %tempsarray;
                 % If smax is not yet defined then set the value of smax and the array of deterministic probabilities that give smax. 
-                if obj.smax == 'x'
-                  obj.smax = s;
-                  obj.detprobsgivesmax(1,:) = obj.detprobvalues;
-                  obj.detprobsrows = obj.detprobsrows + 1;
+                if obj.sMax == 'x'
+                  obj.sMax = s;
+                  obj.detProbsGiveSMax(1,:) = obj.detProbValues;
+                  obj.detProbsRows = obj.detProbsRows + 1;
                 else
                      % If s is greater than the current maximum then set the new value of smax and reset the array of deterministic 
                      % probabilities that give smax with this new value.
-                     if (s > 1.0001*obj.smax)
-                       obj.smax = s;
-                       clear obj.detprobsgivesmax
-                       obj.detprobsgivesmax = zeros(obj.d^(obj.n*obj.m),obj.numvars);
-                       coder.varsize('obj.detprobsgivesmax',[obj.d^(obj.n*obj.m),obj.numvars]);
-%                        obj.detprobsgivesmax = zeros(obj.maxdim,obj.numvars);
-                       obj.detprobsgivesmax(1,:) = obj.detprobvalues;
-                       obj.detprobsrows = 1;
+                     if (s > 1.0001*obj.sMax)
+                       obj.sMax = s;
+                       clear obj.detProbsGiveSMax
+                       obj.detProbsGiveSMax = zeros(obj.totalNumMeas,obj.numVars);
+                       coder.varsize('obj.detProbsGiveSmax',[obj.totalNumMeas,obj.numVars]);
+                       
+                       obj.detProbsGiveSMax(1,:) = obj.detProbValues;
+                       obj.detProbsRows = 1;
 
                      % If s is the same as the current maximum, append the deterministic
                      % probabilities to the array of deterministic probabilities that give smax.
-                     elseif ((0.9999*obj.smax <= s)  && (s <= 1.0001*obj.smax))
-                       obj.detprobsgivesmax(obj.detprobsrows+1,:) = obj.detprobvalues;
-                       obj.detprobsrows = obj.detprobsrows + 1;
-                       
+                     elseif ((0.9999*obj.sMax <= s)  && (s <= 1.0001*obj.sMax))
+                       obj.detProbsGiveSMax(obj.detProbsRows+1,:) = obj.detProbValues;
+                       obj.detProbsRows = obj.detProbsRows + 1;
+
                      % Else If s is less than smax don't do anything, just continue to the next loop.          
                      else
                       
@@ -220,11 +263,11 @@ classdef cbanddimcalc < handle
                 end  
           end
       end
-      function index = getdetprobindex(obj,ni,di,mi)
+      function index = getDetProbIndex(obj,ni,di,mi)
           % GETDETPROBINDEX Calculates the index of the deterministic probability with D_ni(di,mi) within the array of deterministic probabilities.    
           index = 0;
           for i1 = 1:ni-1
-            var = obj.dlist{i1,1,1};
+            var = obj.dList{i1,1,1};
             index = index + sum(var);
           end  
             
@@ -232,7 +275,7 @@ classdef cbanddimcalc < handle
           %cellsize = cell2mat(cellsz);
           %lengthvar = cellsize(2);
           
-          var = obj.dlist{ni,1,1};
+          var = obj.dList{ni,1,1};
             
           for i2 = 1:mi-1
             index = index + var(i2);
@@ -242,67 +285,70 @@ classdef cbanddimcalc < handle
           
           %index = (ni-1)*obj.d*obj.m+(di-1)*obj.m+mi; %%%AS VECTOR ORDERS THEM BY N then D then M this is not correct?
       end
-      function prob = calcprob(obj,pmm,mvalues,dvalues)
+      function prob = calcProb(obj,pMM,mValues,dValues)
       % CALCPROB Calculates the probability P(d1d2..dn|m1m2...mn)
       
            % The expression will take the form of k products of probabilities if there are k parties that make measurements. 
            %For each party that does make measurements calculate the corresponding product.
            % The NUMber of Parties that Make Measurements is the number of outcome variables di we have to loop over.              
-           numpmm = length(pmm)
-           prodterms = zeros(1,numpmm)
-           for i1 = 1:numpmm
-               party = pmm(i1)
-               prodterms(i1) = obj.detprobvalues(getdetprobindex(obj,party,dvalues(party),mvalues(party)))
+           numPMM = length(pMM);
+           prodTerms = zeros(1,numPMM);
+           for i1 = 1:numPMM
+               party = pMM(i1);
+               prodTerms(i1) = obj.detProbValues(getDetProbIndex(obj,party,dValues(party),mValues(party)));
            end
-           prob = prod(prodterms);
+           prob = prod(prodTerms);
       end
-      function [probdistsgivesmax] = calcprobdists(obj)
+      function [probDistsGiveSMax] = calcProbDists(obj)
       % CALCPROBDISTS Calculate the probability distribution vectors that give
       % the classical bound from the array of deterministic probabilities that give the classical bound.
-          obj.marray = zeros(1,obj.n);
-          obj.darray = zeros(1,obj.n);
-          probdistsgivesmax = zeros(obj.detprobsrows,(obj.d*obj.m)^obj.n);
-          for row = 1:obj.detprobsrows
-              obj.detprobs = obj.detprobsgivesmax(row,:);
-              obj.probdist = NaN(1,(obj.d*obj.m)^obj.n);
-              obj.probdistelements = 0;
-              calcprobdist(obj,obj.n,obj.n);
-              probdistsgivesmax(row,:) = obj.probdist;
+          obj.mArray = zeros(1,obj.n);
+          obj.dArray = zeros(1,obj.n);
+          probDistsGiveSMax = zeros(obj.detProbsRows,obj.maximumDetProbs);
+          %For each list of local deterministic probs that gives smax
+          %calculate the behaviour
+          
+          %There is only going to be one index in the probability
+          %distribution that is 1.
+          for row = 1:obj.detProbsRows
+              obj.probDist = zeros(1,obj.maximumDetProbs);
+              localDetProbs = obj.detProbsGiveSMax(row,:);
+              %Calculate all the possible products of the local probabilities
+              %Split the dVecList up into lists of d values for each party
+              sliceOfDetProbs = localDetProbs;
+              for i1 = 1:obj.n   
+                var = obj.dList{i1,1,1};
+                dListSize = sum(var);
+                obj.dProbArray(i1,:) = {sliceOfDetProbs(1:dListSize)};
+                sliceOfDetProbs = sliceOfDetProbs(dListSize+1:length(sliceOfDetProbs));
+              end
+              
+              obj.currDVals = zeros(1,obj.n);
+              obj.probCounter = 1;
+              calcProbDist(obj,obj.n);    
+              probDistsGiveSMax(row,:) = obj.probDist;
           end
       end
-      function calcprobdist(obj,dvarstoloop,mvarstoloop)
-      % CALCPROBDIST Calculates the probability distribution vector from the
+      function calcProbDist(obj,partiesToLoop)
+      % CALCPROBDIST Calculate the probability distribution from the local
       % deterministic probabilities.
       
-          % If there are outcome variables to loop over then loop over them (e.g d1
-          % d2).
-          if dvarstoloop >= 1
-              for dvalue = 1:obj.d
-                  obj.darray(dvarstoloop) = dvalue;
-                  calcprobdist(obj,dvarstoloop-1,mvarstoloop);
-              end
-          % If there are measurement settings to loop over then loop over them (e.g
-          % m1 m2).
-          elseif mvarstoloop >= 1
-              for mvalue = 1:obj.m
-                  obj.marray(mvarstoloop) = mvalue;
-                  calcprobdist(obj,dvarstoloop,mvarstoloop-1);
-              end
-          % Otherwise calculate the current probability term in the probability distribution vector.          
-          else
-              prodterms = zeros(1,obj.n);
-              for party = 1:obj.n
-                  prodterms(party) = obj.detprobs(getdetprobindex(obj,party,obj.darray(party),obj.marray(party)));
-              end
-              curprodterm = prod(prodterms);
-              obj.probdist(obj.probdistelements+1) = curprodterm;
-              obj.probdistelements = obj.probdistelements + 1;
+      if partiesToLoop >= 1
+          for loopcounter = 1:length(obj.dProbArray{obj.n-partiesToLoop+1,1,1})
+              currPartyDList = obj.dProbArray{obj.n-partiesToLoop+1,1,1};
+              obj.currDVals(obj.n-partiesToLoop+1) = currPartyDList(loopcounter);
+              calcProbDist(obj,partiesToLoop-1);       
           end
+      else
+          obj.probDist(obj.probCounter) = prod(obj.currDVals);
+          obj.probCounter = obj.probCounter + 1;
+          %%%%%%%%%%%%%%%%Set each element of prob dist
       end
-      function [dim] = calcdim(~,probdistsgivesmax)
+      end
+      function [dim] = calcDim(~,probDistsGiveSMax)
       % CALCDIM Calculate the dimension of the bell inequality from the
       % probability distributions that give the classical bound.
-      dim = rank(probdistsgivesmax); 
+      dim = rank(probDistsGiveSMax); 
       end
    end
 end
