@@ -1,5 +1,5 @@
-classdef cbanddimcalc < handle
-% CBANDDIMCALC A class used to calculate the dimension and classical bound
+classdef classicalBoundAndDimCalculator < handle
+% CLASSICALBOUNDANDDIMCALCULATOR A class used to calculate the dimension and classical bound
 % of a bell inequality.
    properties      
       % The number of parties in the scenario.
@@ -28,7 +28,9 @@ classdef cbanddimcalc < handle
       % An array used to hold the current probability distribution in calcProbDists
       probDist
       % The total number of possible measurements.
-      totalNumMeas  
+      totalNumMeas
+      % A list of the maximum number of measurements that each party can make.
+      maxMeasSettings
       % The length of each behaviour (probability vector)
       behaviourLength      
       % An array to hold a set of local probabilities as an array. Each row is the set of local probabilities for one of the parties. Used in CalcProbDists to calculate the behaviours. 
@@ -39,23 +41,27 @@ classdef cbanddimcalc < handle
       behaviourElementCounter
    end
    methods       
-      function obj = cbanddimcalc(noParties,maxNoMeasOutcomesList,probCoeffList)
+      function obj = cbanddimcalc(maxNoMeasOutcomesList,probCoeffList)
          % CBANDDIMCALC Constructor function to initialise the properties.
-         obj.noParties = noParties;
+         obj.noParties = size(maxNoMeasOutcomesList,2);
          obj.maxNoMeasOutcomesList = maxNoMeasOutcomesList;
          obj.probCoeffList = probCoeffList;
+         
+         % Initialisation of temporary variables.
          % A variable used to calculate the spatial dimension of Bell inequalities of this scenario.
          prodVals = zeros(1,size(maxNoMeasOutcomesList,1));
          % A variable used to calculate the total number of local probabilities.
          totalNoLocalProbs = 0;
          % An array used to calculate the behaviour length.
-         noPossibleOutcomesArray = zeros(1,noParties);       
+         noPossibleOutcomesArray = zeros(1,obj.noParties);       
          % Used to calculate the total number of possible measurements.
          totalNumMeas = 0;
+         % Used to store the maximum number of measurements each party can make.
+         maxMeasSettings = zeros(1,obj.noParties);
          
          % Loop over each party's list of outcomes to calculate and initialise some of the properties.
-         for party = 1:size(maxNoMeasOutcomesList,1)
-            currentMaxNoMeasOutcomesList = maxNoMeasOutcomesList{party,1,1};
+         for party = 1:size(maxNoMeasOutcomesList,2)
+            currentMaxNoMeasOutcomesList = maxNoMeasOutcomesList{1,party,1};
 
             % Calculate the total number of local probabilities/outcomes
             totalNoLocalProbs = totalNoLocalProbs + sum(currentMaxNoMeasOutcomesList);
@@ -65,10 +71,13 @@ classdef cbanddimcalc < handle
             noPossibleOutcomesArray(party) = sum(currentMaxNoMeasOutcomesList);
             
             % Calculate the number of possible measurements for the current party (The length of the outcomes list)
-            cellSz = cellfun(@size, maxNoMeasOutcomesList(party,:),'uni',false);
+            cellSz = cellfun(@size, maxNoMeasOutcomesList(:,party),'uni',false);
             cellSize = cell2mat(cellSz);
-            currPartyTotalNoMeas = cellSize(2);
+            currPartyTotalNoMeas = cellSize(1);
             
+            %Store the maximum number of measurements that each party can make.
+            maxMeasSettings(party) = currPartyTotalNoMeas;
+                        
             % Calculate the total number of possible measurements.
             totalNumMeas = totalNumMeas + currPartyTotalNoMeas;
             
@@ -95,6 +104,7 @@ classdef cbanddimcalc < handle
          obj.totalNoLocalProbs = totalNoLocalProbs;
          obj.localProbValues = zeros(1,obj.totalNoLocalProbs); 
          obj.totalNumMeas = totalNumMeas;
+         obj.maxMeasSettings = maxMeasSettings;
 
          %Make detprobsgivesmax dynamic but specify an upper bound. The spatial dimension of the Bell inequality is an upper estimate of the maximum number of ways of getting smax, and so the memory allocated.
          obj.localProbsGiveSMax = zeros(obj.maxDim,obj.totalNoLocalProbs);
@@ -141,9 +151,7 @@ classdef cbanddimcalc < handle
                 obj.localProbValues = zeros(1,obj.totalNoLocalProbs);
                 indexArrayIndex = 0;
                 for party = 1:obj.noParties
-                    cellSz = cellfun(@size, obj.maxNoMeasOutcomesList(party,:),'uni',false);
-                    cellSize = cell2mat(cellSz);
-                    maxMeasSetting = cellSize(2);
+                    maxMeasSetting = obj.maxMeasSettings(party);
                     for measSetting = 1:maxMeasSetting
                         indexArrayIndex = indexArrayIndex + 1;
                         indexValue = obj.indexArray(indexArrayIndex);
@@ -158,20 +166,13 @@ classdef cbanddimcalc < handle
                               
                 % Calculate the maximum number of measurements each party can make. This is used to calculate the current measurement setting numbers
                 currMeasSettings = cat(2,zeros(1,obj.noParties-1),[-1]);
-                maxMeasSettings = zeros(1,obj.noParties);
-                for party = 1:obj.noParties
-                    cellSz = cellfun(@size, obj.maxNoMeasOutcomesList(party,:),'uni',false);
-                    cellSize = cell2mat(cellSz);
-                    maxMeasSetting = cellSize(2);
-                    maxMeasSettings(party) = maxMeasSetting;
-                end    
-                for i2 = 1:size(obj.probCoeffList,1)
+                for column = 1:size(obj.probCoeffList,2)
                     % Get the correct measurement settings (e.g m1 and m2) from how far into the coefficient list we are. 
                     % Calculate the measurement settings by keep adding one to measurement setting numbers. 
 
                     for party = obj.noParties:-1:1
                         % If the current measurement setting number is maximum set it to zero and carry it over to thenext parties measurement number.
-                        if currMeasSettings(party) == maxMeasSettings(party)
+                        if currMeasSettings(party) == obj.maxMeasSettings(party)
                             currMeasSettings(party) = 0;
                         else
                         % Add one to the measurement setting.    
@@ -186,26 +187,26 @@ classdef cbanddimcalc < handle
                     noPartiesMakingMeas=length(partiesMakingMeas);
                     
                     % Calculate the number of probability terms to be calculated.
-                    cellSz = cellfun(@size, obj.probCoeffList(i2,:),'uni',false);
+                    cellSz = cellfun(@size, obj.probCoeffList(:,column),'uni',false);
                     cellSize = cell2mat(cellSz);
-                    noProbTerms = cellSize(2);
+                    noProbTerms = cellSize(1);
                     
                     % Calculate the maximum number of outcomes for each party that is making a measurement. This is used to find which probabilities are going to be multiplied.               
                     outcomeNosOfPartiesMakingMeas = cat(2,ones(1,noPartiesMakingMeas-1),[0]);
                     maxOutcomeNosOfPartiesMakingMeas = zeros(1,noPartiesMakingMeas);
                     for index = 1:noPartiesMakingMeas
                         party = partiesMakingMeas(index);  
-                        currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{party,1,1};
+                        currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{1,party,1};
                         maxOutcomeNo = currPartysMaxNoMeasOutcomesList(currMeasSettings(party));
                         maxOutcomeNosOfPartiesMakingMeas(index) = maxOutcomeNo;
                     end
                     
-                    for i3 = 1:noProbTerms
+                    for row = 1:noProbTerms
                         % Calculate which of the local probabilities are going to be multiplied from how far into this list of probabilities we are, for these measurement settings.
                         
                         % Calculate the coeffient of the probability term.
-                        var = obj.probCoeffList{i2,1,1};
-                        coeff = var(i3);
+                        var = obj.probCoeffList{1,column,1};
+                        coeff = var(row);
                         
                         % If the coefficient is zero then just skip the calculation otherwise continue. 
                         if not(coeff) == 0
@@ -256,7 +257,7 @@ classdef cbanddimcalc < handle
                        coder.varsize('obj.localProbsGiveSMax',[obj.totalNumMeas,obj.totalNoLocalProbs]);
                        
                        obj.localProbsGiveSMax(1,:) = obj.localProbValues;
-                       obj.localProbsGiveSMaxRows = 1;2
+                       obj.localProbsGiveSMaxRows = 1;
 
                      % If the current Bell value is the same as the current maximum add the local probability to the list of probabilities that give the maximum.
                      elseif ((0.9999*obj.sMax <= s)  && (s <= 1.0001*obj.sMax))
@@ -277,11 +278,11 @@ classdef cbanddimcalc < handle
           % The index is found by summing the outcome numbers.
           index = 0;
           for party = 1:partyNo-1
-            currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{party,1,1};
+            currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{1,party,1};
             index = index + sum(currPartysMaxNoMeasOutcomesList);
           end  
           
-          currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{partyNo,1,1};
+          currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{1,partyNo,1};
             
           for measSetting = 1:measSettingNo-1
             index = index + currPartysMaxNoMeasOutcomesList(measSetting);
@@ -319,7 +320,7 @@ classdef cbanddimcalc < handle
               % Do this by splitting up the list of local probabilities into lists of local probabilities for each party.
               sliceOfLocalProbs = localDetProbs;
               for party = 1:obj.noParties   
-                currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{party,1,1};
+                currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{1,party,1};
                 currPartysLocalProbListSize = sum(currPartysMaxNoMeasOutcomesList);
                 obj.localProbArray(party,:) = {sliceOfLocalProbs(1:currPartysLocalProbListSize)};
                 sliceOfLocalProbs = sliceOfLocalProbs(currPartysLocalProbListSize+1:length(sliceOfLocalProbs));
@@ -363,3 +364,4 @@ end
 %TODO LIST:
 %Rename files and functions
 %Do validation on size and shape of probCoeffList based on maxNoMeasOutcomesList
+%Update ReadMe
