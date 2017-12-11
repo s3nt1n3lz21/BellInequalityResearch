@@ -51,20 +51,20 @@ classdef classicalBoundAndDimCalculator < handle
          % A variable used to calculate the spatial dimension of Bell inequalities of this scenario.
          prodVals = zeros(1,size(maxNoMeasOutcomesList,1));
          % A variable used to calculate the total number of local probabilities.
-         totalNoLocalProbs = 0;
+         totalNoLocalProbsTemp = 0;
          % An array used to calculate the behaviour length.
          noPossibleOutcomesArray = zeros(1,obj.noParties);       
          % Used to calculate the total number of possible measurements.
-         totalNumMeas = 0;
+         totalNumMeasTemp = 0;
          % Used to store the maximum number of measurements each party can make.
-         maxMeasSettings = zeros(1,obj.noParties);
+         maxMeasSettingsTemp = zeros(1,obj.noParties);
          
          % Loop over each party's list of outcomes to calculate and initialise some of the properties.
          for party = 1:size(maxNoMeasOutcomesList,2)
             currentMaxNoMeasOutcomesList = maxNoMeasOutcomesList{1,party,1};
 
             % Calculate the total number of local probabilities/outcomes
-            totalNoLocalProbs = totalNoLocalProbs + sum(currentMaxNoMeasOutcomesList);
+            totalNoLocalProbsTemp = totalNoLocalProbsTemp + sum(currentMaxNoMeasOutcomesList);
             % Used to calculate the spatial dimension.
             prodValue = 0;
             
@@ -76,16 +76,16 @@ classdef classicalBoundAndDimCalculator < handle
             currPartyTotalNoMeas = cellSize(1);
             
             %Store the maximum number of measurements that each party can make.
-            maxMeasSettings(party) = currPartyTotalNoMeas;
+            maxMeasSettingsTemp(party) = currPartyTotalNoMeas;
                         
             % Calculate the total number of possible measurements.
-            totalNumMeas = totalNumMeas + currPartyTotalNoMeas;
+            totalNumMeasTemp = totalNumMeasTemp + currPartyTotalNoMeas;
             
             % Create another list to hold the maximum number of measurement outcomes for each measurement of each party but as a 1-dimensional vector.
             if party == 1
-                maxNoMeasOutcomesVec = currentMaxNoMeasOutcomesList;
+                maxNoMeasOutcomesVecTemp = currentMaxNoMeasOutcomesList;
             else
-                maxNoMeasOutcomesVec = horzcat(maxNoMeasOutcomesVec,currentMaxNoMeasOutcomesList);           
+                maxNoMeasOutcomesVecTemp = horzcat(maxNoMeasOutcomesVecTemp,currentMaxNoMeasOutcomesList);           
             end           
             
             % Calculate the spatial dimension
@@ -100,11 +100,11 @@ classdef classicalBoundAndDimCalculator < handle
          
          obj.maxDim = prod(prodVals) - 1;
          obj.behaviourLength = prod(noPossibleOutcomesArray);
-         obj.maxNoMeasOutcomesVec = maxNoMeasOutcomesVec;
-         obj.totalNoLocalProbs = totalNoLocalProbs;
+         obj.maxNoMeasOutcomesVec = maxNoMeasOutcomesVecTemp;
+         obj.totalNoLocalProbs = totalNoLocalProbsTemp;
          obj.localProbValues = zeros(1,obj.totalNoLocalProbs); 
-         obj.totalNumMeas = totalNumMeas;
-         obj.maxMeasSettings = maxMeasSettings;
+         obj.totalNumMeas = totalNumMeasTemp;
+         obj.maxMeasSettings = maxMeasSettingsTemp;
 
          %Make detprobsgivesmax dynamic but specify an upper bound. The spatial dimension of the Bell inequality is an upper estimate of the maximum number of ways of getting smax, and so the memory allocated.
          obj.localProbsGiveSMax = zeros(obj.maxDim,obj.totalNoLocalProbs);
@@ -362,6 +362,5 @@ classdef classicalBoundAndDimCalculator < handle
 end
 
 %TODO LIST:
-%Rename files and functions
 %Do validation on size and shape of probCoeffList based on maxNoMeasOutcomesList
 %Update ReadMe
