@@ -2,353 +2,364 @@ classdef cbanddimcalc < handle
 % CBANDDIMCALC A class used to calculate the dimension and classical bound
 % of a bell inequality.
    properties      
-      % The number of parties n, measurement outcomes d and measurement settings m. Here they are assumed to all be the same.      
-      n
-      %d
-      %m
-      % The number of single party deterministic probabilities.
-      numVars
-      % The array to hold the di values of each constraint equation that are 1.
-      indexArray
-      % The maximum possible dimension of the bell inequality is an estimate of
-      % the maximum number of ways of getting smax, and so the memory allocated.
-      maxDim
-      % The correlator coefficient list.  
-      coeffList
-      % The array of the current values of the single party deterministic probabilities.      
-      detProbValues
-      % The current maximum found so far.
-      sMax
-      % The array of deterministic probabilities that give smax.      
-      detProbsGiveSMax
-      % How many rows full is the array of deterministic probabilities (not the number of rows).     
-      detProbsRows
-      % An array used in calcprobdists to hold the current values of the possible
-      % outcomes.
-      dArray
-      % An array used in calcprobdists to hold the current values of the
-      % measurent settings.
-      mArray
-      % An array used to hold the current probability distribution in
-      % calcProbDists
-      probDist
-      % How full is the vector probdist
-      probDistElements
+      % The number of parties in the scenario.
+      noParties
       % The list of the total number of possible outcomes for each measurement of each party 
-      dList
-      % A vector form of the dlist
-      dVecList
-      % The total number of possible measurements
-      totalNumMeas
-      % The total length of each probability vector
-      maximumDetProbs
-      % The local deterministic probabilities as an array, each row is the
-      % local deterministic probabilities of one of the parties
-      dProbArray
-      % A list used in calcProbDist to hold the d values that are looped over
-      currDVals
-      % A counter used in CalcProbDist for the index of the current probability term in
-      % the probability distribution
-      probCounter
+      maxNoMeasOutcomesList    
+      % The list of probability coefficients that define the Bell operator.
+      probCoeffList
+      
+      % A vector form of maxNoMeasOutcomesList
+      maxNoMeasOutcomesVec       
+      % The total number of local deterministic probabilities.
+      totalNoLocalProbs
+      % Holds numbers that determine which one of the local probabilities part of each constraint group is currently taking the value 1.
+      indexArray
+      % The maximum possible facet dimension of the Bell inequality (The spatial dimension).
+      maxDim
+      % An array holding the current values of the local deterministic probabilities.      
+      localProbValues
+      % The current maximum classical value of the Bell Inequality found so far.
+      sMax
+      % The array of local probabilities that give smax. Each row is one set of local probabilities that give sMax.      
+      localProbsGiveSMax
+      % How many rows full is the array of local probabilities (not the number of rows).     
+      localProbsGiveSMaxRows 
+      % An array used to hold the current probability distribution in calcProbDists
+      probDist
+      % The total number of possible measurements.
+      totalNumMeas  
+      % The length of each behaviour (probability vector)
+      behaviourLength      
+      % An array to hold a set of local probabilities as an array. Each row is the set of local probabilities for one of the parties. Used in CalcProbDists to calculate the behaviours. 
+      localProbArray
+      % A list used in calcProbDist to hold the current local probabilities of each party that will be multiplied together to calculate each element of the behaviour.
+      localProbsToMultiply
+      % A counter used in CalcProbDist to keep track of what element of the behaviour is being calculated.
+      behaviourElementCounter
    end
    methods       
-      function obj = cbanddimcalc(n,dList,coeffList)
-         % CBANDDIMCALC Constructor function to the initialise properties.
-         obj.n = n;
-         obj.dList = dList;
-         % Calculate the spatial dimension of bell inequalities of this scenario
-         prodVals = zeros(1,size(dList,1));
-         % The total number of deterministic probabilities
-         numVars = 0;
-         % An array used to calculate the maximum possible deterministic probabilities "maximumdetprobs"
-         tempVarArray = zeros(1,n);       
-         % The total number of possible measurements to be used later for "indexarray"
+      function obj = cbanddimcalc(noParties,maxNoMeasOutcomesList,probCoeffList)
+         % CBANDDIMCALC Constructor function to initialise the properties.
+         obj.noParties = noParties;
+         obj.maxNoMeasOutcomesList = maxNoMeasOutcomesList;
+         obj.probCoeffList = probCoeffList;
+         % A variable used to calculate the spatial dimension of Bell inequalities of this scenario.
+         prodVals = zeros(1,size(maxNoMeasOutcomesList,1));
+         % A variable used to calculate the total number of local probabilities.
+         totalNoLocalProbs = 0;
+         % An array used to calculate the behaviour length.
+         noPossibleOutcomesArray = zeros(1,noParties);       
+         % Used to calculate the total number of possible measurements.
          totalNumMeas = 0;
-         for i1 = 1:size(dList,1)
-            var = dList{i1,1,1};
+         
+         % Loop over each party's list of outcomes to calculate and initialise some of the properties.
+         for party = 1:size(maxNoMeasOutcomesList,1)
+            currentMaxNoMeasOutcomesList = maxNoMeasOutcomesList{party,1,1};
 
-            % Calculate the total number of deterministic probabilities
-            numVars = numVars + sum(var);
-            
+            % Calculate the total number of local probabilities/outcomes
+            totalNoLocalProbs = totalNoLocalProbs + sum(currentMaxNoMeasOutcomesList);
+            % Used to calculate the spatial dimension.
             prodValue = 0;
-            tempVarArray(i1) = sum(var);
             
-            cellSz = cellfun(@size, dList(i1,:),'uni',false);
+            noPossibleOutcomesArray(party) = sum(currentMaxNoMeasOutcomesList);
+            
+            % Calculate the number of possible measurements for the current party (The length of the outcomes list)
+            cellSz = cellfun(@size, maxNoMeasOutcomesList(party,:),'uni',false);
             cellSize = cell2mat(cellSz);
-            lengthVar = cellSize(2);
+            currPartyTotalNoMeas = cellSize(2);
             
-            % Calculate the total number of possible measurements to be used later for "indexarray"
-            totalNumMeas = totalNumMeas + lengthVar;
+            % Calculate the total number of possible measurements.
+            totalNumMeas = totalNumMeas + currPartyTotalNoMeas;
             
-            if i1 == 1
-                dVecList = var;
+            % Create another list to hold the maximum number of measurement outcomes for each measurement of each party but as a 1-dimensional vector.
+            if party == 1
+                maxNoMeasOutcomesVec = currentMaxNoMeasOutcomesList;
             else
-                dVecList = horzcat(dVecList,var);           
+                maxNoMeasOutcomesVec = horzcat(maxNoMeasOutcomesVec,currentMaxNoMeasOutcomesList);           
             end           
             
-            for i2 = 1:lengthVar
-                prodValue = prodValue + var(i2);
+            % Calculate the spatial dimension
+            for i2 = 1:currPartyTotalNoMeas
+                prodValue = prodValue + currentMaxNoMeasOutcomesList(i2);
             end
-            prodValue = prodValue - lengthVar + 1;
-            prodVals(i1) = prodValue;
+            prodValue = prodValue - currPartyTotalNoMeas + 1;
+            % Used to calculate the spatial dimension.
+            prodVals(party) = prodValue;
                       
-         end                             
-         obj.maxDim = prod(prodVals) - 1;
-         obj.maximumDetProbs = prod(tempVarArray);
-         obj.dVecList = dVecList;
-         %obj.d = d;
-         %obj.m = m;
+         end
          
-         obj.numVars = numVars;
+         obj.maxDim = prod(prodVals) - 1;
+         obj.behaviourLength = prod(noPossibleOutcomesArray);
+         obj.maxNoMeasOutcomesVec = maxNoMeasOutcomesVec;
+         obj.totalNoLocalProbs = totalNoLocalProbs;
+         obj.localProbValues = zeros(1,obj.totalNoLocalProbs); 
          obj.totalNumMeas = totalNumMeas;
-         obj.coeffList = coeffList;
-         obj.detProbValues = zeros(1,obj.numVars);
-         %Make detprobsgivesmax dynamic but specify an upper bound.
-         obj.detProbsGiveSMax = zeros(obj.maxDim,obj.numVars);
-         coder.varsize('obj.detProbsGiveSmax',[obj.maxDim,obj.numVars]);
-         obj.detProbsRows = 0;
+
+         %Make detprobsgivesmax dynamic but specify an upper bound. The spatial dimension of the Bell inequality is an upper estimate of the maximum number of ways of getting smax, and so the memory allocated.
+         obj.localProbsGiveSMax = zeros(obj.maxDim,obj.totalNoLocalProbs);
+         coder.varsize('obj.localProbsGiveSMax',[obj.maxDim,obj.totalNoLocalProbs]);
+         
+         obj.localProbsGiveSMaxRows = 0;
          obj.sMax = 'x';
          obj.indexArray = zeros(1,obj.maxDim);
-         obj.dProbArray = {};
-         %listsize = size(coefflist,1);
-         %if not(listsize == (m+1)^n)
-         %   fprintf("Error, the dimension of the correlator coefficient list does not match the scenario\n The dimension is %.0f when it should be %.0f",size(corrcoefflist,2),(m+1)^n)
-         %end
+         obj.localProbArray = {};
+         
       end
-      function [dim,sMax] = calc(obj)
-      % CALC Calculate the dimension and classical bound.
-       loopDetProbs(obj,obj.totalNumMeas);
-       % Calculate the probability distribution vectors from determinsitic
-       % probability array.
-       sMax = obj.sMax;
-       probDistsGiveSMax = calcProbDists(obj);
-       % Calculate the dimension.
-       dim = calcDim(obj,probDistsGiveSMax);    
-      end
-      function loopDetProbs(obj,varsToLoop)
-      % LOOPDETPROBS The main algorithm to loop over the possible values of the
-      % deterministic probabilities (0 or 1).
       
-          % If there is a still a deterministic probability to loop over then loop
+      function [dim,sMax] = calc(obj)
+      % CALC Start the calculation of the dimension and classical bound.
+      
+          % Calculate the maximum classical bound and local probabilities that give sMax.
+          loopDetProbs(obj,obj.totalNumMeas);
+          sMax = obj.sMax;
+          
+          % Calculate the behaviours from the local probabilities that give sMax.
+          probDistsGiveSMax = calcProbDists(obj);
+          
+          % Calculate the facet dimension of the inequality.
+          dim = calcDim(obj,probDistsGiveSMax);    
+      end
+      
+      function loopDetProbs(obj,indexVarsToLoop)
+      % LOOPDETPROBS The main algorithm to loop over all the possible extremal behaviours and calculate the Bell value.
+      
+          % The values of the index variables determine the values of the
+          % local probabilities. If there is a still a index variable to loop over then loop
           % over its possible values.
-          if varsToLoop >= 1
-               maxDValue = obj.dVecList(obj.totalNumMeas-varsToLoop+1); %%%%%%%%%%%%Does the order matter?
-               for value = 1:maxDValue
-                  obj.indexArray(obj.totalNumMeas-varsToLoop+1) = value;
+          if indexVarsToLoop >= 1
+               maxIndexVarValue = obj.maxNoMeasOutcomesVec(obj.totalNumMeas-indexVarsToLoop+1);
+               for indexValue = 1:maxIndexVarValue
+                  obj.indexArray(obj.totalNumMeas-indexVarsToLoop+1) = indexValue;
                   % Then loop over the rest by calling the function again, with one less variable to loop over.    
-                  loopDetProbs(obj,varsToLoop-1);
+                  loopDetProbs(obj,indexVarsToLoop-1);
                end
                
-          % If there are no more deterministic probabilities to loop over then
-          % calculate the Bell Inequality correlator for the current values of the
-          % deterministic probabilities.
+          % Now calculate the Bell value for the current values of the local probabilities.
           else
-                % Initialise the value of the expression to be 0 and get the values of the variables from the indexes.         
-                obj.detProbValues = zeros(1,obj.numVars);
-                dIndex = 0;
-                for party = 1:obj.n
-                    cellSz = cellfun(@size, obj.dList(party,:),'uni',false);
+                % Set the values of the local probabilities from the current values of the index variables.           
+                obj.localProbValues = zeros(1,obj.totalNoLocalProbs);
+                indexArrayIndex = 0;
+                for party = 1:obj.noParties
+                    cellSz = cellfun(@size, obj.maxNoMeasOutcomesList(party,:),'uni',false);
                     cellSize = cell2mat(cellSz);
-                    lengthVar = cellSize(2);
-                    for mi = 1:lengthVar
-                        dIndex = dIndex + 1;
-                        di = obj.indexArray(dIndex);
-                        obj.detProbValues(getDetProbIndex(obj,party,di,mi)) = 1;
+                    maxMeasSetting = cellSize(2);
+                    for measSetting = 1:maxMeasSetting
+                        indexArrayIndex = indexArrayIndex + 1;
+                        indexValue = obj.indexArray(indexArrayIndex);
+                        obj.localProbValues(getLocalProbIndex(obj,party,indexValue,measSetting)) = 1;
                     end
                 end
 
+                % Initialise the Bell value.              
                 s = 0;
                              
-                % For each term in the coefficient list calculate the corresponding contribution from that probability. e.g coeff*prob
-                % Get the correct measurement settings (e.g m1 and m2) from how far into the coefficient list we are by firstcalculating the maximum m values.
-                mValues = cat(2,zeros(1,obj.n-1),[-1]);
-                maxMValues = zeros(1,obj.n);
-                for dIndex = 1:obj.n
-                    cellSz = cellfun(@size, obj.dList(dIndex,:),'uni',false);
+                % For each term in the probability coefficient list calculate the corresponding contribution to the Bell value. e.g coeff*prob.
+                              
+                % Calculate the maximum number of measurements each party can make. This is used to calculate the current measurement setting numbers
+                currMeasSettings = cat(2,zeros(1,obj.noParties-1),[-1]);
+                maxMeasSettings = zeros(1,obj.noParties);
+                for party = 1:obj.noParties
+                    cellSz = cellfun(@size, obj.maxNoMeasOutcomesList(party,:),'uni',false);
                     cellSize = cell2mat(cellSz);
-                    maxMValue = cellSize(2);
-                    maxMValues(dIndex) = maxMValue;
+                    maxMeasSetting = cellSize(2);
+                    maxMeasSettings(party) = maxMeasSetting;
                 end    
-                for i2 = 1:size(obj.coeffList,1)
-                    % Get the correct measurement settings (e.g m1 and m2) from how far into the coefficient list we are
-                    %mvalues = dec2base(i2-1,obj.m+1,obj.n)-'0';
+                for i2 = 1:size(obj.probCoeffList,1)
+                    % Get the correct measurement settings (e.g m1 and m2) from how far into the coefficient list we are. 
+                    % Calculate the measurement settings by keep adding one to measurement setting numbers. 
 
-                    for index = obj.n:-1:1
-                        if mValues(index) == maxMValues(index)
-                            mValues(index) = 0;
+                    for party = obj.noParties:-1:1
+                        % If the current measurement setting number is maximum set it to zero and carry it over to thenext parties measurement number.
+                        if currMeasSettings(party) == maxMeasSettings(party)
+                            currMeasSettings(party) = 0;
                         else
-                            mValues(index) = mValues(index) + 1;
+                        % Add one to the measurement setting.    
+                            currMeasSettings(party) = currMeasSettings(party) + 1;
                             break
                         end
                     end
                     
                     % Find which of the Parties do Make Measurements (PMM) as this affects the form of the probability to be calculated. 
-                    % If k parties make measurements then there will be k products of variables.            
-                    partiesMakeMeas = find(mValues);
-                    numPartiesMakeMeas=length(partiesMakeMeas);
+                    % If k parties make measurements then there will be k products of local probabilities.       
+                    partiesMakingMeas = find(currMeasSettings);
+                    noPartiesMakingMeas=length(partiesMakingMeas);
                     
-                    cellSz = cellfun(@size, obj.coeffList(i2,:),'uni',false);
+                    % Calculate the number of probability terms to be calculated.
+                    cellSz = cellfun(@size, obj.probCoeffList(i2,:),'uni',false);
                     cellSize = cell2mat(cellSz);
-                    lengthVar = cellSize(2);
+                    noProbTerms = cellSize(2);
                     
-                    dValuesPMM = cat(2,ones(1,numPartiesMakeMeas-1),[0]);
-                    maxDValuesPMM = zeros(1,numPartiesMakeMeas);
-                    for dIndex = 1:numPartiesMakeMeas
-                        party = partiesMakeMeas(dIndex);  
-                        dvec = obj.dList{party,1,1};
-                        maxDValue = dvec(mValues(party));
-                        maxDValuesPMM(dIndex) = maxDValue;
+                    % Calculate the maximum number of outcomes for each party that is making a measurement. This is used to find which probabilities are going to be multiplied.               
+                    outcomeNosOfPartiesMakingMeas = cat(2,ones(1,noPartiesMakingMeas-1),[0]);
+                    maxOutcomeNosOfPartiesMakingMeas = zeros(1,noPartiesMakingMeas);
+                    for index = 1:noPartiesMakingMeas
+                        party = partiesMakingMeas(index);  
+                        currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{party,1,1};
+                        maxOutcomeNo = currPartysMaxNoMeasOutcomesList(currMeasSettings(party));
+                        maxOutcomeNosOfPartiesMakingMeas(index) = maxOutcomeNo;
                     end
-                    for i3 = 1:lengthVar
-                        var = obj.coeffList{i2,1,1};
+                    
+                    for i3 = 1:noProbTerms
+                        % Calculate which of the local probabilities are going to be multiplied from how far into this list of probabilities we are, for these measurement settings.
+                        
+                        % Calculate the coeffient of the probability term.
+                        var = obj.probCoeffList{i2,1,1};
                         coeff = var(i3);
+                        
                         % If the coefficient is zero then just skip the calculation otherwise continue. 
                         if not(coeff) == 0
-                            for index = numPartiesMakeMeas:-1:1
-                                if dValuesPMM(index) == maxDValuesPMM(index)
-                                    dValuesPMM(index) = 1;
+                            
+                            % Calculate which of the local probabilities are going to be multiplied by keep adding one to the list of outcome numbers.                            
+                            for index = noPartiesMakingMeas:-1:1
+                                if outcomeNosOfPartiesMakingMeas(index) == maxOutcomeNosOfPartiesMakingMeas(index)
+                                    outcomeNosOfPartiesMakingMeas(index) = 1;
                                 else
-                                    dValuesPMM(index) = dValuesPMM(index) + 1;
+                                    outcomeNosOfPartiesMakingMeas(index) = outcomeNosOfPartiesMakingMeas(index) + 1;
                                     break
                                 end
                             end
-                            % get the values of the outcomes observed from the values of i3 and the parties that make measurements.  
-                            dValues = zeros(1,obj.n);
-                            counter = 1;
-                            %Add zeros back in to dvalues
-                            for party = 1:obj.n
-                                if ismember(party, partiesMakeMeas(:))
-                                    dValues(party) = dValuesPMM(counter);
-                                    counter = counter + 1;
+                            
+                            % Calculate the final list of outcome numbers by adding zeros back in for the parties that don't make measurements.
+                            outcomeNos = zeros(1,obj.noParties);
+                            partiesMakingMeasCounter = 1;
+                            for party = 1:obj.noParties
+                                if ismember(party, partiesMakingMeas(:))
+                                    outcomeNos(party) = outcomeNosOfPartiesMakingMeas(partiesMakingMeasCounter);
+                                    partiesMakingMeasCounter = partiesMakingMeasCounter + 1;
                                 else
-                                    dValues(party) = 0;
+                                    outcomeNos(party) = 0;
                                 end
                             end
-                            %dvalues
-                            % Now calculate the probability from the current location in the list i2,i3               
-                            prob = calcProb(obj,partiesMakeMeas,mValues,dValues);                     
+                            
+                            % Now calculate the probability from the current measurement settings and outcome numbers.           
+                            prob = calcProb(obj,partiesMakingMeas,currMeasSettings,outcomeNos);
+                            
+                            % Calculate the contribution to the Bell value.
                             s = s + coeff*prob;
                         end
                     end
                 end
-                s;
-                %tempsarray;
-                % If smax is not yet defined then set the value of smax and the array of deterministic probabilities that give smax. 
+
+                % If the maximum Bell value is not yet defined then set its value to the result of the first calculation. Store the set of local probabilities that give the current maximum Bell value. 
                 if obj.sMax == 'x'
                   obj.sMax = s;
-                  obj.detProbsGiveSMax(1,:) = obj.detProbValues;
-                  obj.detProbsRows = obj.detProbsRows + 1;
+                  obj.localProbsGiveSMax(1,:) = obj.localProbValues;
+                  obj.localProbsGiveSMaxRows = obj.localProbsGiveSMaxRows + 1;
                 else
-                     % If s is greater than the current maximum then set the new value of smax and reset the array of deterministic 
-                     % probabilities that give smax with this new value.
+                    
+                     % If the current Bell value is greater than the current maximum then set the new value of the maximum and clear the list of local probabilities that give the maximum.
                      if (s > 1.0001*obj.sMax)
                        obj.sMax = s;
-                       clear obj.detProbsGiveSMax
-                       obj.detProbsGiveSMax = zeros(obj.totalNumMeas,obj.numVars);
-                       coder.varsize('obj.detProbsGiveSmax',[obj.totalNumMeas,obj.numVars]);
+                       clear obj.localProbsGiveSMax
+                       obj.localProbsGiveSMax = zeros(obj.totalNumMeas,obj.totalNoLocalProbs);
+                       coder.varsize('obj.localProbsGiveSMax',[obj.totalNumMeas,obj.totalNoLocalProbs]);
                        
-                       obj.detProbsGiveSMax(1,:) = obj.detProbValues;
-                       obj.detProbsRows = 1;
+                       obj.localProbsGiveSMax(1,:) = obj.localProbValues;
+                       obj.localProbsGiveSMaxRows = 1;2
 
-                     % If s is the same as the current maximum, append the deterministic
-                     % probabilities to the array of deterministic probabilities that give smax.
+                     % If the current Bell value is the same as the current maximum add the local probability to the list of probabilities that give the maximum.
                      elseif ((0.9999*obj.sMax <= s)  && (s <= 1.0001*obj.sMax))
-                       obj.detProbsGiveSMax(obj.detProbsRows+1,:) = obj.detProbValues;
-                       obj.detProbsRows = obj.detProbsRows + 1;
+                       obj.localProbsGiveSMax(obj.localProbsGiveSMaxRows+1,:) = obj.localProbValues;
+                       obj.localProbsGiveSMaxRows = obj.localProbsGiveSMaxRows + 1;
 
-                     % Else If s is less than smax don't do anything, just continue to the next loop.          
+                     % If the current Bell value is less than the maximum then just continue to the next extremal point.         
                      else
                       
                      end    
                 end  
           end
       end
-      function index = getDetProbIndex(obj,ni,di,mi)
-          % GETDETPROBINDEX Calculates the index of the deterministic probability with D_ni(di,mi) within the array of deterministic probabilities.    
-          index = 0;
-          for i1 = 1:ni-1
-            var = obj.dList{i1,1,1};
-            index = index + sum(var);
-          end  
-            
-          %cellsz = cellfun(@size, dlist(i1,:),'uni',false);
-          %cellsize = cell2mat(cellsz);
-          %lengthvar = cellsize(2);
+      
+      function index = getLocalProbIndex(obj,partyNo,outcomeNo,measSettingNo)
+      % GETLOCALPROBINDEX Calculates the index of the local probability of party (partyNo) doing measurement (measSetting) and getting outcome (outcomeNo) e.g D_ni(di,mi) within the list of local probabilities
           
-          var = obj.dList{ni,1,1};
+          % The index is found by summing the outcome numbers.
+          index = 0;
+          for party = 1:partyNo-1
+            currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{party,1,1};
+            index = index + sum(currPartysMaxNoMeasOutcomesList);
+          end  
+          
+          currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{partyNo,1,1};
             
-          for i2 = 1:mi-1
-            index = index + var(i2);
+          for measSetting = 1:measSettingNo-1
+            index = index + currPartysMaxNoMeasOutcomesList(measSetting);
           end
           
-          index = index + di;
-          
-          %index = (ni-1)*obj.d*obj.m+(di-1)*obj.m+mi; %%%AS VECTOR ORDERS THEM BY N then D then M this is not correct?
+          index = index + outcomeNo;
       end
-      function prob = calcProb(obj,pMM,mValues,dValues)
-      % CALCPROB Calculates the probability P(d1d2..dn|m1m2...mn)
+      
+      function prob = calcProb(obj,partiesMakingMeas,currMeasSettings,outcomeNos)
+      % CALCPROB Calculates the probability that the parties get the given outcomes for the measurements they make P(d1d2..dk|m1m2...mk)
       
            % The expression will take the form of k products of probabilities if there are k parties that make measurements. 
-           %For each party that does make measurements calculate the corresponding product.
-           % The NUMber of Parties that Make Measurements is the number of outcome variables di we have to loop over.              
-           numPMM = length(pMM);
-           prodTerms = zeros(1,numPMM);
-           for i1 = 1:numPMM
-               party = pMM(i1);
-               prodTerms(i1) = obj.detProbValues(getDetProbIndex(obj,party,dValues(party),mValues(party)));
+           % For each party that does make a measurement calculate the corresponding local probability they get their particular outcome.           
+           noPartiesMakingMeas = length(partiesMakingMeas);
+           localProbsBeingMultiplied = zeros(1,noPartiesMakingMeas);
+           for counter = 1:noPartiesMakingMeas
+               party = partiesMakingMeas(counter);
+               localProbsBeingMultiplied(counter) = obj.localProbValues(getLocalProbIndex(obj,party,outcomeNos(party),currMeasSettings(party)));
            end
-           prob = prod(prodTerms);
+           
+           % Multiply the local probabilities together.
+           prob = prod(localProbsBeingMultiplied);
       end
+      
       function [probDistsGiveSMax] = calcProbDists(obj)
-      % CALCPROBDISTS Calculate the probability distribution vectors that give
-      % the classical bound from the array of deterministic probabilities that give the classical bound.
-          obj.mArray = zeros(1,obj.n);
-          obj.dArray = zeros(1,obj.n);
-          probDistsGiveSMax = zeros(obj.detProbsRows,obj.maximumDetProbs);
-          %For each list of local deterministic probs that gives smax
-          %calculate the behaviour
+      % CALCPROBDISTS Calculate the behaviours P(d1d2..dn|m1m2...mn) that give the classical bound from the array of local probabilities that give the classical bound.
           
-          %There is only going to be one index in the probability
-          %distribution that is 1.
-          for row = 1:obj.detProbsRows
-              obj.probDist = zeros(1,obj.maximumDetProbs);
-              localDetProbs = obj.detProbsGiveSMax(row,:);
-              %Calculate all the possible products of the local probabilities
-              %Split the dVecList up into lists of d values for each party
-              sliceOfDetProbs = localDetProbs;
-              for i1 = 1:obj.n   
-                var = obj.dList{i1,1,1};
-                dListSize = sum(var);
-                obj.dProbArray(i1,:) = {sliceOfDetProbs(1:dListSize)};
-                sliceOfDetProbs = sliceOfDetProbs(dListSize+1:length(sliceOfDetProbs));
+          % For each set of local deterministic probabilities that give the bound calculate the behaviour.
+          probDistsGiveSMax = zeros(obj.localProbsGiveSMaxRows,obj.behaviourLength);
+          for row = 1:obj.localProbsGiveSMaxRows
+              obj.probDist = zeros(1,obj.behaviourLength);
+              localDetProbs = obj.localProbsGiveSMax(row,:);
+         
+              % Calculate the behaviour by looping over all the possible products of local probabilities P=D1D2...Dn for each D1,D2,...,Dn
+              % Do this by splitting up the list of local probabilities into lists of local probabilities for each party.
+              sliceOfLocalProbs = localDetProbs;
+              for party = 1:obj.noParties   
+                currPartysMaxNoMeasOutcomesList = obj.maxNoMeasOutcomesList{party,1,1};
+                currPartysLocalProbListSize = sum(currPartysMaxNoMeasOutcomesList);
+                obj.localProbArray(party,:) = {sliceOfLocalProbs(1:currPartysLocalProbListSize)};
+                sliceOfLocalProbs = sliceOfLocalProbs(currPartysLocalProbListSize+1:length(sliceOfLocalProbs));
               end
               
-              obj.currDVals = zeros(1,obj.n);
-              obj.probCounter = 1;
-              calcProbDist(obj,obj.n);    
+              % Calculate the current behaviour/probability distribution.
+              obj.localProbsToMultiply = zeros(1,obj.noParties);
+              obj.behaviourElementCounter = 1;
+              calcProbDist(obj,obj.noParties);
+              % Store the probability distributions for calculation of the dimension.
               probDistsGiveSMax(row,:) = obj.probDist;
           end
       end
-      function calcProbDist(obj,partiesToLoop)
-      % CALCPROBDIST Calculate the probability distribution from the local
-      % deterministic probabilities.
       
-      if partiesToLoop >= 1
-          for loopcounter = 1:length(obj.dProbArray{obj.n-partiesToLoop+1,1,1})
-              currPartyDList = obj.dProbArray{obj.n-partiesToLoop+1,1,1};
-              obj.currDVals(obj.n-partiesToLoop+1) = currPartyDList(loopcounter);
-              calcProbDist(obj,partiesToLoop-1);       
+      function calcProbDist(obj,partiesToLoop)
+      % CALCPROBDIST Calculate the probability distribution P(d1d2..dn|m1m2...mn) from the local deterministic probabilities.
+      
+          % Loop over all the possible products of the local probabilities of each party through recursion.
+          if partiesToLoop >= 1
+              for loopcounter = 1:length(obj.localProbArray{obj.noParties-partiesToLoop+1,1,1})
+                  currPartysLocalProbList = obj.localProbArray{obj.noParties-partiesToLoop+1,1,1};
+                  obj.localProbsToMultiply(obj.noParties-partiesToLoop+1) = currPartysLocalProbList(loopcounter);
+                  calcProbDist(obj,partiesToLoop-1);       
+              end
+          else
+              % Calculate the product of the current local probabilities being multiplied.        
+              obj.probDist(obj.behaviourElementCounter) = prod(obj.localProbsToMultiply);
+              obj.behaviourElementCounter = obj.behaviourElementCounter + 1;
           end
-      else
-          obj.probDist(obj.probCounter) = prod(obj.currDVals);
-          obj.probCounter = obj.probCounter + 1;
-          %%%%%%%%%%%%%%%%Set each element of prob dist
       end
-      end
+      
       function [dim] = calcDim(~,probDistsGiveSMax)
-      % CALCDIM Calculate the dimension of the bell inequality from the
-      % probability distributions that give the classical bound.
-      dim = rank(probDistsGiveSMax); 
+      % CALCDIM Calculate the dimension of the bell inequality from the probability distributions that give the classical bound.
+      
+          dim = rank(probDistsGiveSMax); 
       end
+      
    end
 end
+
+%TODO LIST:
+%Rename files and functions
+%Do validation on size and shape of probCoeffList based on maxNoMeasOutcomesList
