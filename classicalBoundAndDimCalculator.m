@@ -138,9 +138,9 @@ classdef classicalBoundAndDimCalculator < handle
           % local probabilities. If there is a still a index variable to loop over then loop
           % over its possible values.
           if indexNosToLoop >= 1
-               maxIndexVarValue = obj.maxNoMeasOutcomesVec(obj.noConstraints-indexNosToLoop+1);
-               for indexValue = 1:maxIndexVarValue
-                  obj.indexArray(obj.noConstraints-indexNosToLoop+1) = indexValue;
+               maxIndexNoValue = obj.maxNoMeasOutcomesVec(obj.noConstraints-indexNosToLoop+1);
+               for indexNo = 1:maxIndexNoValue
+                  obj.indexArray(obj.noConstraints-indexNosToLoop+1) = indexNo;
                   % Then loop over the rest by calling the function again, with one less variable to loop over.    
                   loopExtremalBehaviours(obj,indexNosToLoop-1);
                end
@@ -154,8 +154,8 @@ classdef classicalBoundAndDimCalculator < handle
                     maxMeasSetting = obj.maxMeasSettings(party);
                     for measSetting = 1:maxMeasSetting
                         indexArrayIndex = indexArrayIndex + 1;
-                        indexValue = obj.indexArray(indexArrayIndex);
-                        obj.localProbValues(getLocalProbIndex(obj,party,indexValue,measSetting)) = 1;
+                        indexNo = obj.indexArray(indexArrayIndex);
+                        obj.localProbValues(getLocalProbIndex(obj,party,indexNo,measSetting)) = 1;
                     end
                 end
 
