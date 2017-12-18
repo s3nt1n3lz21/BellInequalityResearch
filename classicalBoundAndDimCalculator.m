@@ -27,8 +27,8 @@ classdef classicalBoundAndDimCalculator < handle
       localProbsGiveSMaxRows 
       % An array used to hold the current probability distribution in calcProbDists
       probDist
-      % The total number of possible measurements.
-      totalNumMeas
+      % The total number of constraints.
+      noConstraints
       % A list of the maximum number of measurements that each party can make.
       maxMeasSettings
       % The length of each behaviour (probability vector)
@@ -41,7 +41,7 @@ classdef classicalBoundAndDimCalculator < handle
       behaviourElementCounter
    end
    methods       
-      function obj = cbanddimcalc(maxNoMeasOutcomesList,probCoeffList)
+      function obj = classicalBoundAndDimCalculator(maxNoMeasOutcomesList,probCoeffList)
          % CBANDDIMCALC Constructor function to initialise the properties.
          obj.noParties = size(maxNoMeasOutcomesList,2);
          obj.maxNoMeasOutcomesList = maxNoMeasOutcomesList;
@@ -55,7 +55,7 @@ classdef classicalBoundAndDimCalculator < handle
          % An array used to calculate the behaviour length.
          noPossibleOutcomesArray = zeros(1,obj.noParties);       
          % Used to calculate the total number of possible measurements.
-         totalNumMeasTemp = 0;
+         noConstraintsTemp = 0;
          % Used to store the maximum number of measurements each party can make.
          maxMeasSettingsTemp = zeros(1,obj.noParties);
          
@@ -79,7 +79,7 @@ classdef classicalBoundAndDimCalculator < handle
             maxMeasSettingsTemp(party) = currPartyTotalNoMeas;
                         
             % Calculate the total number of possible measurements.
-            totalNumMeasTemp = totalNumMeasTemp + currPartyTotalNoMeas;
+            noConstraintsTemp = noConstraintsTemp + currPartyTotalNoMeas;
             
             % Create another list to hold the maximum number of measurement outcomes for each measurement of each party but as a 1-dimensional vector.
             if party == 1
@@ -103,7 +103,7 @@ classdef classicalBoundAndDimCalculator < handle
          obj.maxNoMeasOutcomesVec = maxNoMeasOutcomesVecTemp;
          obj.totalNoLocalProbs = totalNoLocalProbsTemp;
          obj.localProbValues = zeros(1,obj.totalNoLocalProbs); 
-         obj.totalNumMeas = totalNumMeasTemp;
+         obj.noConstraints = noConstraintsTemp;
          obj.maxMeasSettings = maxMeasSettingsTemp;
 
          %Make detprobsgivesmax dynamic but specify an upper bound. The spatial dimension of the Bell inequality is an upper estimate of the maximum number of ways of getting smax, and so the memory allocated.
@@ -121,7 +121,7 @@ classdef classicalBoundAndDimCalculator < handle
       % CALC Start the calculation of the dimension and classical bound.
       
           % Calculate the maximum classical bound and local probabilities that give sMax.
-          loopDetProbs(obj,obj.totalNumMeas);
+          loopExtremalBehaviours(obj,obj.noConstraints);
           sMax = obj.sMax;
           
           % Calculate the behaviours from the local probabilities that give sMax.
@@ -131,18 +131,18 @@ classdef classicalBoundAndDimCalculator < handle
           dim = calcDim(obj,probDistsGiveSMax);    
       end
       
-      function loopDetProbs(obj,indexVarsToLoop)
-      % LOOPDETPROBS The main algorithm to loop over all the possible extremal behaviours and calculate the Bell value.
+      function loopExtremalBehaviours(obj,indexNosToLoop)
+      % LOOPEXTREMALBEHAVIOURS The main algorithm to loop over all the possible extremal behaviours and calculate the Bell value.
       
           % The values of the index variables determine the values of the
           % local probabilities. If there is a still a index variable to loop over then loop
           % over its possible values.
-          if indexVarsToLoop >= 1
-               maxIndexVarValue = obj.maxNoMeasOutcomesVec(obj.totalNumMeas-indexVarsToLoop+1);
+          if indexNosToLoop >= 1
+               maxIndexVarValue = obj.maxNoMeasOutcomesVec(obj.noConstraints-indexNosToLoop+1);
                for indexValue = 1:maxIndexVarValue
-                  obj.indexArray(obj.totalNumMeas-indexVarsToLoop+1) = indexValue;
+                  obj.indexArray(obj.noConstraints-indexNosToLoop+1) = indexValue;
                   % Then loop over the rest by calling the function again, with one less variable to loop over.    
-                  loopDetProbs(obj,indexVarsToLoop-1);
+                  loopExtremalBehaviours(obj,indexNosToLoop-1);
                end
                
           % Now calculate the Bell value for the current values of the local probabilities.
@@ -164,7 +164,6 @@ classdef classicalBoundAndDimCalculator < handle
                              
                 % For each term in the probability coefficient list calculate the corresponding contribution to the Bell value. e.g coeff*prob.
                               
-                % Calculate the maximum number of measurements each party can make. This is used to calculate the current measurement setting numbers
                 currMeasSettings = cat(2,zeros(1,obj.noParties-1),[-1]);
                 for column = 1:size(obj.probCoeffList,2)
                     % Get the correct measurement settings (e.g m1 and m2) from how far into the coefficient list we are. 
@@ -253,8 +252,8 @@ classdef classicalBoundAndDimCalculator < handle
                      if (s > 1.0001*obj.sMax)
                        obj.sMax = s;
                        clear obj.localProbsGiveSMax
-                       obj.localProbsGiveSMax = zeros(obj.totalNumMeas,obj.totalNoLocalProbs);
-                       coder.varsize('obj.localProbsGiveSMax',[obj.totalNumMeas,obj.totalNoLocalProbs]);
+                       obj.localProbsGiveSMax = zeros(obj.noConstraints,obj.totalNoLocalProbs);
+                       coder.varsize('obj.localProbsGiveSMax',[obj.noConstraints,obj.totalNoLocalProbs]);
                        
                        obj.localProbsGiveSMax(1,:) = obj.localProbValues;
                        obj.localProbsGiveSMaxRows = 1;
