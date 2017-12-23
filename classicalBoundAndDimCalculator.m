@@ -83,9 +83,9 @@ classdef classicalBoundAndDimCalculator < handle
             
             % Create another list to hold the maximum number of measurement outcomes for each measurement of each party but as a 1-dimensional vector.
             if party == 1
-                maxNoMeasOutcomesVecTemp = currentMaxNoMeasOutcomesList;
+                maxNoMeasOutcomesVecTemp = currentMaxNoMeasOutcomesList';
             else
-                maxNoMeasOutcomesVecTemp = horzcat(maxNoMeasOutcomesVecTemp,currentMaxNoMeasOutcomesList);           
+                maxNoMeasOutcomesVecTemp = horzcat(maxNoMeasOutcomesVecTemp,currentMaxNoMeasOutcomesList');           
             end           
             
             % Calculate the spatial dimension
@@ -98,7 +98,7 @@ classdef classicalBoundAndDimCalculator < handle
                       
          end
          
-         obj.maxDim = prod(prodVals) - 1;
+         obj.maxDim = prod(prodVals) - 2;
          obj.behaviourLength = prod(noPossibleOutcomesArray);
          obj.maxNoMeasOutcomesVec = maxNoMeasOutcomesVecTemp;
          obj.totalNoLocalProbs = totalNoLocalProbsTemp;
@@ -112,7 +112,7 @@ classdef classicalBoundAndDimCalculator < handle
          
          obj.localProbsGiveSMaxRows = 0;
          obj.sMax = 'x';
-         obj.indexArray = zeros(1,obj.maxDim);
+         obj.indexArray = zeros(1,obj.noConstraints);
          obj.localProbArray = {};
          
       end
@@ -240,7 +240,6 @@ classdef classicalBoundAndDimCalculator < handle
                         end
                     end
                 end
-
                 % If the maximum Bell value is not yet defined then set its value to the result of the first calculation. Store the set of local probabilities that give the current maximum Bell value. 
                 if obj.sMax == 'x'
                   obj.sMax = s;
@@ -354,7 +353,7 @@ classdef classicalBoundAndDimCalculator < handle
       function [dim] = calcDim(~,probDistsGiveSMax)
       % CALCDIM Calculate the dimension of the bell inequality from the probability distributions that give the classical bound.
       
-          dim = rank(probDistsGiveSMax); 
+          dim = rank(probDistsGiveSMax)-1; 
       end
       
    end

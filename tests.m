@@ -2,52 +2,120 @@
 % expected dimension and maximum classical value achievable, these are found from
 % literature. So far the algorithm works for all but the n = 4 tests.
 
-% Test 1: Expected dimension: 8 Expected Bound: 2
-% dlist(1,:) = {[2,2]}; dlist(2,:) = {[2,2]};
-% coefflist(1,:) = {[0]}; coefflist(2,:) = {[0 0]}; coefflist(3,:) = {[0 0]}; coefflist(4,:) = {[0 0]}; coefflist(5,:) = {[1 -1 -1 1]}; coefflist(6,:) = {[1 -1 -1 1]}; coefflist(7,:) = {[0 0]}; coefflist(8,:) = {[1 -1 -1 1]}; coefflist(9,:) = {[-1 1 1 -1]};
-% [dimension,classicalbound] = calcdimandclassicalbound(2,dlist,coefflist)
+% Test 1: Expected dimension: 7 Expected Bound: 2
+% OLD VERSION
+% [maxNoMeasOutcomesList,probCoeffList] = convertCorrToProb(2,2,2,[0 0 0 0 1 1 0 1 -1])
+% [dimension,classicalbound] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
+% NEW VERSION
+% maxNoMeasOutcomesList(:,1) = {[2;2]}; maxNoMeasOutcomesList(:,2) = {[2;2]};
+% probCoeffList(:,1) = {[0]}; probCoeffList(:,2) = {[0; 0]}; probCoeffList(:,3) = {[0; 0]}; probCoeffList(:,4) = {[0; 0]}; probCoeffList(:,5) = {[1; -1 ;-1 ;1]}; probCoeffList(:,6) = {[1; -1 ;-1; 1]}; probCoeffList(:,7) = {[0; 0]}; probCoeffList(:,8) = {[1; -1; -1; 1]}; probCoeffList(:,9) = {[-1; 1; 1; -1]};
+% [dimension,classicalbound] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
 
-% Test 2: Expected dimension: 15 Expected Bound: 4
-% dlist(1,:) = {[2,2,2]}; dlist(2,:) = {[2,2,2]};
-% coefflist(1,:) = {[0]}; coefflist(2,:) = {[1 -1]}; coefflist(3,:) = {[1 -1]}; coefflist(4,:) = {[0 0]}; coefflist(5,:) = {[1 -1]}; coefflist(6,:) = {[-1 1 1 -1]}; coefflist(7,:) = {[-1 1 1 -1]}; coefflist(8,:) = {[1 -1 -1 1]}; coefflist(9,:) = {[1 -1]}; coefflist(10,:) = {[-1 1 1 -1]}; coefflist(11,:) = {[-1 1 1 -1]}; coefflist(12,:) = {[-1 1 1 -1]}; coefflist(13,:) = {[0 0]}; coefflist(14,:) = {[1 -1 -1 1]}; coefflist(15,:) = {[-1 1 1 -1]}; coefflist(16,:) = {[0 0 0 0]};
-% [dimension,classicalbound] = calcdimandclassicalbound(2,dlist,coefflist)
+% Test 2 : Expected dimension: 14 Expected bound: 0
+% maxNoMeasOutcomesList(:,1) = {[2;2;2]}; maxNoMeasOutcomesList(:,2) = {[2;2;2]};
+% probCoeffList(:,1) = {[0]};
+% probCoeffList(:,2) = {[-2;0]};
+% probCoeffList(:,3) = {[-1;0]};
+% probCoeffList(:,4) = {[0;0]};
+% probCoeffList(:,5) = {[-1;0]};
+% probCoeffList(:,6) = {[1;0;0;0]};
+% probCoeffList(:,7) = {[1;0;0;0]};
+% probCoeffList(:,8) = {[1;0;0;0]};
+% probCoeffList(:,9) = {[0;0]};
+% probCoeffList(:,10) = {[1;0;0;0]};
+% probCoeffList(:,11) = {[1;0;0;0]};
+% probCoeffList(:,12) = {[-1;0;0;0]};
+% probCoeffList(:,13) = {[0;0]};
+% probCoeffList(:,14) = {[1;0;0;0]};
+% probCoeffList(:,15) = {[-1;0;0;0]};
+% probCoeffList(:,16) = {[0;0;0;0]};
 
-% Test 3: Expected dimension: 26 Expected Bound: 6
-% coefflist(1,:) = {[0]}; coefflist(2,:) = {[0 0]}; coefflist(3,:) = {[1
-% -1]}; coefflist(4,:) = {[0 0]}; coefflist(5,:) = {[1 -1]}; coefflist(6,:)
-% = {[-1 1 1 -1]}; coefflist(7,:) = {[-1 1 1 -1]}; coefflist(8,:) = {[1 -1
-% -1 1]}; coefflist(9,:) = {[1 -1]}; coefflist(10,:) = {[-1 1 1 -1]};
-% coefflist(11,:) = {[-1 1 1 -1]}; coefflist(12,:) = {[-1 1 1 -1]};
-% coefflist(13,:) = {[0 0]}; coefflist(14,:) = {[1 -1 -1 1]};
-% coefflist(15,:) = {[-1 1 1 -1]}; coefflist(16,:) = {[0 0 0 0]};
-% coefflist(17,:) = {[0 0 0 0]}; coefflist(18,:) = {[0 0 0 0]};
-% coefflist(19,:) = {[0 0 0 0]}; coefflist(20,:) = {[0 0 0 0]};
-% coefflist(21,:) = {[0 0 0 0]}; coefflist(22,:) = {[0 0 0 0]};
-% coefflist(23,:) = {[0 0 0 0]}; coefflist(24,:) = {[0 0 0 0]};
-% coefflist(25,:) = {[0 0 0 0]}; coefflist(26,:) = {[0 0 0 0]};
-% coefflist(27,:) = {[0 0 0 0]};
+% Test 3: Expected dimension: 25 Expected Bound: 6
+% [maxNoMeasOutcomesList,probCoeffList] = convertCorrToProb(3,2,2,[+0 +0 +2 +0 +1 -1 +2 -1 -1 +0 +1 -1 +1 -1 -2 -1 -2 +1 +2 -1 -1 -1 -2 +1 -1 +1 +2])
+% [dimension,classicalbound] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
 
-% [dimension,classicalbound] = calcdimandclassicalbound(3,2,2,[+0 +0 +2 +0 +1 -1 +2 -1 -1 +0 +1 -1 +1 -1 -2 -1 -2 +1 +2 -1 -1 -1 -2 +1 -1 +1 +2])
+% Test 4: Expected dimension: 62 Expected Bound: 8
+% [maxNoMeasOutcomesList,probCoeffList] = convertCorrToProb(3,2,3,[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 -2 0 0 -2 1 1 0 0 1 -1 0 0 0 0 0 -2 1 1 0 1 4 1 0 1 1 0 0 0 0 0 0 0 1 -1 0 1 1 0 0 -1 0 -1])
+% [dimension,classicalbound] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
 
-% Test 4: Expected dimension: 63 Expected Bound: 8
-% [dimension,classicalbound] = calcdimandclassicalbound(3,2,3,[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 -2 0 0 -2 1 1 0 0 1 -1 0 0 0 0 0 -2 1 1 0 1 4 1 0 1 1 0 0 0 0 0 0 0 1 -1 0 1 1 0 0 -1 0 -1])
+% Test 5: Expected dimension: 79 Expected Bound: 2
+% [maxNoMeasOutcomesList,probCoeffList] = convertCorrToProb(4,2,2,[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 -1])
+% [dimension,classicalbound] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
 
-% Test 5: Expected dimension: 80 Expected Bound: 9
-% [dimension,classicalbound] = calcdimandclassicalbound(4,2,2,[+0 2 1 2 0 0 1 0 -1 2 0 0 0 1 1 0 1 -1 1 0 -1 0 1 -1 -1 -1 0 2 0 0 0 1 1 0 0 -1 0 1 0 1 -5 2 -1 2 1 0 1 -1 -1 2 1 -1 1 0 1 0 -1 0 1 -1 -1 -1 0 0 1 -1 -1 2 1 -1 1 0 -1 -1 0 -1 1 0 0 0 -2])
+% Test 6: Expected dimension: 241 Expected Bound: 2
+% [maxNoMeasOutcomesList,probCoeffList] = convertCorrToProb(5,2,2,[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1])
+% [dimension,classicalbound] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
 
-% Test 6: Expected dimension: 80 Expected Bound: 10
-% [dimension,classicalbound] = calcdimandclassicalbound(4,2,2,[0 3 1 3 0 -1 1 -1 0 3 0 -1 0 0 0 -1 0 -1 1 -1 0 -1 0 -1 0 -1 -1 3 0 -1 0 0 0 -1 0 -1 0 0 0 0 -3 1 0 1 1 -1 0 -1 0 1 1 -1 1 0 1 -1 0 -1 0 -1 0 -1 -1 -1 0 -1 0 1 1 -1 1 0 0 -1 -1 -1 1 0 -1 0 -1])
+% Test 7: Expected dimension: 10 Expected Bound: 0 
+% maxNoMeasOutcomesList(:,1) = {[2;2]}; maxNoMeasOutcomesList(:,2) = {[2;2;2]};
+% probCoeffList(:,1) = {[0]};
+% probCoeffList(:,2) = {[0;0]};
+% probCoeffList(:,3) = {[-1;0]};
+% probCoeffList(:,4) = {[0;0]};
+% probCoeffList(:,5) = {[-1;0]};
+% probCoeffList(:,6) = {[0;0;0;0]};
+% probCoeffList(:,7) = {[1;0;0;0]};
+% probCoeffList(:,8) = {[1;0;0;0]};
+% probCoeffList(:,9) = {[0;0]};
+% probCoeffList(:,10) = {[0;0;0;0]};
+% probCoeffList(:,11) = {[1;0;0;0]};
+% probCoeffList(:,12) = {[-1;0;0;0]};
 
-% Test 7: Expected dimension: 80 Expected Bound: 2
-% [dimension,classicalbound] = calcdimandclassicalbound(4,2,2,[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 -1])
+% Test ?: Expected dimension: 23 Expected Bound: 0 equation 39 doesnt work?
+% no terms for third outcome? reading incorrectly? talking about
+% correlators.
+% maxNoMeasOutcomesList(:,1) = {[2;2]}; maxNoMeasOutcomesList(:,2) = {[2;2]};
+% probCoeffList(:,1) = {[0]};
+% probCoeffList(:,2) = {[-1;-1;0]};
+% probCoeffList(:,3) = {[0;0;0]};
+% probCoeffList(:,4) = {[-1;-1;0]};
+% probCoeffList(:,5) = {[1;1;0;1;0;0;0;0;0]};
+% probCoeffList(:,6) = {[0;1;0;1;1;0;0;0;0]};
+% probCoeffList(:,7) = {[0;0;0]};
+% probCoeffList(:,8) = {[0;1;0;1;1;0;0;0;0]};
+% probCoeffList(:,9) = {[0;-1;0;-1;-1;0;0;0;0]};
 
-% Test 8: Expected dimension: 242 Expected Bound: 2
-% [dimension,classicalbound] = calcdimandclassicalbound(5,2,2,[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1])
+% probCoeffList(:,1) = {[0]};
+% probCoeffList(:,2) = {[-1;-1]};
+% probCoeffList(:,3) = {[0;0]};
+% probCoeffList(:,4) = {[-1;-1]};
+% probCoeffList(:,5) = {[1;1;1;0]};
+% probCoeffList(:,6) = {[0;1;1;1]};
+% probCoeffList(:,7) = {[0;0]};
+% probCoeffList(:,8) = {[0;1;1;1]};
+% probCoeffList(:,9) = {[0;-1;-1;-1]};
 
-%OLD
-% [dimension,classicalbound] = calcdimandclassicalbound(2,2,2,[0 0 0 0 1 1 0 1 -1])
-% [dimension,classicalbound] = calcdimandclassicalbound(2,2,3,[0 1 1 0 1 -1 -1 1 1 -1 -1 -1 0 1 -1 0])
-% [dimension,classicalbound] = calcdimandclassicalbound(3,2,2,[+0 +0 +2 +0 +1 -1 +2 -1 -1 +0 +1 -1 +1 -1 -2 -1 -2 +1 +2 -1 -1 -1 -2 +1 -1 +1 +2])
+% Written down correctly?
+% equation 14 in "relevant multi-setting..." dimension:23 bound:2
+% maxNoMeasOutcomesList(:,1) = {[3;3]}; maxNoMeasOutcomesList(:,2) = {[3;3]};
+% probCoeffList(:,1) = {[0]};
+% probCoeffList(:,2) = {[0;0;0]};
+% probCoeffList(:,3) = {[0;0;0]};
+% probCoeffList(:,4) = {[0;0;0]};
+% probCoeffList(:,5) = {[1;0;-1;-1;1;0;0;-1;1]};
+% probCoeffList(:,6) = {[1;-1;0;0;1;-1;-1;0;1]};
+% probCoeffList(:,7) = {[0;0;0]};
+% probCoeffList(:,8) = {[-1;0;1;1;-1;0;0;1;-1]};
+% probCoeffList(:,9) = {[1;0;-1;-1;1;0;0;-1;1]};
+
+% Test 2 old: Expected dimension: 14 Expected Bound: 4 reference?
+% OLD VERSION
+% [maxNoMeasOutcomesList,probCoeffList] = convertCorrToProb(2,2,3,[0 1 1 0 1 -1 -1 1 1 -1 -1 -1 0 1 -1 0])
+% [dimension,classicalbound] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
+% NEW VERSION
+% maxNoMeasOutcomesList(:,1) = {[2;2;2]}; maxNoMeasOutcomesList(:,2) = {[2;2;2]};
+% probCoeffList(:,1) = {[0]}; probCoeffList(:,2) = {[1 ;-1]}; probCoeffList(:,3) = {[1; -1]}; probCoeffList(:,4) = {[0; 0]}; probCoeffList(:,5) = {[1; -1]}; probCoeffList(:,6) = {[-1; 1; 1; -1]}; probCoeffList(:,7) = {[-1; 1 ;1 ;-1]}; probCoeffList(:,8) = {[1; -1; -1; 1]}; probCoeffList(:,9) = {[1 ;-1]}; probCoeffList(:,10) = {[-1; 1 ;1 ;-1]}; probCoeffList(:,11) = {[-1; 1; 1; -1]}; probCoeffList(:,12) = {[-1; 1; 1; -1]}; probCoeffList(:,13) = {[0; 0]}; probCoeffList(:,14) = {[1; -1; -1; 1]}; probCoeffList(:,15) = {[-1; 1; 1; -1]}; probCoeffList(:,16) = {[0; 0; 0; 0]};
+% [dimension,classicalbound] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
+
+% INCORRECT TEST
+% Test ?: Expected dimension: 80 Expected Bound: 9
+% [maxNoMeasOutcomesList,probCoeffList] = convertCorrToProb(4,2,2,[+0 2 1 2 0 0 1 0 -1 2 0 0 0 1 1 0 1 -1 1 0 -1 0 1 -1 -1 -1 0 2 0 0 0 1 1 0 0 -1 0 1 0 1 -5 2 -1 2 1 0 1 -1 -1 2 1 -1 1 0 1 0 -1 0 1 -1 -1 -1 0 0 1 -1 -1 2 1 -1 1 0 -1 -1 0 -1 1 0 0 0 -2])
+% [dimension,classicalbound] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
+
+% INCORRECT TEST
+% Test ?: Expected dimension: 80 Expected Bound: 10
+% [maxNoMeasOutcomesList,probCoeffList] = convertCorrToProb(4,2,2,[0 3 1 3 0 -1 1 -1 0 3 0 -1 0 0 0 -1 0 -1 1 -1 0 -1 0 -1 0 -1 -1 3 0 -1 0 0 0 -1 0 -1 0 0 0 0 -3 1 0 1 1 -1 0 -1 0 1 1 -1 1 0 1 -1 0 -1 0 -1 0 -1 -1 -1 0 -1 0 1 1 -1 1 0 0 -1 -1 -1 1 0 -1 0 -1])
+% [dimension,classicalbound] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
 
 % Code to test the timings of the algorithm using these test states, here
 % only the test states that the algorithm succeeded producing the correct
