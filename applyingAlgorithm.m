@@ -168,13 +168,13 @@ fprintf("Starting...\n")
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-numPoints = 4;
+numPoints = 1;
 interval = (2*pi/numPoints);
 %angleList = [i*interval for i in range(1,numPoints)]
 angleList = linspace(0,2*pi,1);
 theta1List = linspace(0,2*pi,numPoints);
 pointCounter = 1;
-totalNumPoints = numPoints^6;
+totalNumPoints = 1;
 
 robustnessMatrix = zeros(totalNumPoints,1);
 ketStateMatrix = zeros(totalNumPoints,2^d);
@@ -219,13 +219,14 @@ for theta1 = theta1List
                         %b = 0.15*b
                         %numelx = 6
                         %b = A(:,8)
-                        %b = bTest
+                        b = bTest
                         %A = ATest2;
                         % Start timing the calculation.
                         t1 = clock;
     
                         % Apply the CVX optimization algorithm and calculate the robustness and corresponding Bell Inequality y.
-                        cvx_begin quiet;
+                        cvx_begin;
+                            %cvx_solver sedumi;
                             variable x(numelx);
                             dual variable y;
                             minimize( norm( x, 1 ) );
@@ -282,7 +283,7 @@ data = table(robustnessMatrix,inequalityMatrix,dimensionMatrix,bestDimensionMatr
 %xfit = bounddiffmatrix;
 %yfit = dimDiffMatrix;
 stateParametrisation = 1:totalNumPoints;
-s2 = scatter(stateParametrisation,dimDiffMatrix,100);
+s2 = scatter(stateParametrisation,dimDiffMatrix,25);
 s2.Marker = '.';
 xlabel('State','Interpreter','Latex','FontSize',15);
 ylabel('$dim - dim_{max}$','Interpreter','Latex','FontSize',15);
