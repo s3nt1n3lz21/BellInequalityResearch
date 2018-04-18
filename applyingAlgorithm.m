@@ -37,12 +37,24 @@ sigmaZ = ket0*ket0'-ket1*ket1';
 % projs(:,:,4) = ketMinus*ketMinus';
 
 %Define Alices measurements
-measurements(:,:,1) = sigmaZ;
-measurements(:,:,2) = sigmaX;
+% measurements(:,:,1) = sigmaZ;
+% measurements(:,:,2) = sigmaX;
 
 %Define Bobs measurements
-measurements(:,:,3) = (1/sqrt(2))*(sigmaZ+sigmaX);
-measurements(:,:,4) = (1/sqrt(2))*(sigmaZ-sigmaX);
+% measurements(:,:,3) = (1/sqrt(2))*(sigmaZ+sigmaX);
+% measurements(:,:,4) = (1/sqrt(2))*(sigmaZ-sigmaX);
+
+%Define Alice and Bobs local measurements, they make the same measurements
+phi1 = [sqrt(2)/2;sqrt(2)/2]
+phi2 = [sqrt(2)/2;sqrt(2)/4+(sqrt(6)*1i)/4]
+
+% %Alices measurements
+measurements(:,:,1) = phi1*phi1';
+measurements(:,:,2) = phi2*phi2';
+
+% %Bobs measurements
+measurements(:,:,3) = phi1*phi1';
+measurements(:,:,4) = phi2*phi2';
 
 %Calculate the eigenvectors and projectors of Alices measurements
 [eigenvectorsMatrix,~] = eig(measurements(:,:,1));
@@ -101,14 +113,30 @@ instance = extremalPointLooper(maxNoMeasOutcomesList);
 % Calculate the matrix A
 C = calc(instance);
 A = C;
-A(3,:) = C(5,:);
-A(4,:) = C(6,:);
-A(5,:) = C(3,:);
+% A(3,:) = C(5,:);
+% A(4,:) = C(6,:);
+% A(5,:) = C(3,:);
+% A(6,:) = C(4,:);
+% A(11,:) = C(13,:);
+% A(12,:) = C(14,:);
+% A(13,:) = C(11,:);
+% A(14,:) = C(12,:);
+A(1,:) = C(1,:);
+A(2,:) = C(3,:);
+A(3,:) = C(9,:);
+A(4,:) = C(11,:);
+A(5,:) = C(2,:);
 A(6,:) = C(4,:);
+A(7,:) = C(10,:);
+A(8,:) = C(12,:);
+A(9,:) = C(5,:);
+A(10,:) = C(7,:);
 A(11,:) = C(13,:);
-A(12,:) = C(14,:);
-A(13,:) = C(11,:);
-A(14,:) = C(12,:);
+A(12,:) = C(15,:);
+A(13,:) = C(6,:);
+A(14,:) = C(8,:);
+A(15,:) = C(14,:);
+A(16,:) = C(16,:);
 
 % Define the best possible dimension for the scenario.
 bestdimension = ((m*(d-1)+1)^n) - 1;
@@ -205,6 +233,7 @@ for theta1 = theta1List
                         numelx = size(tensorProdProjs,3);
                         b = zeros(numelx,1);
                         
+                        %ketstate = [1/sqrt(2);0;0;1/sqrt(2)];
                         %rho = ketstate*ketstate';
                         %trace(rho);
                         %tensorProdProjs(:,:,i1)
@@ -228,11 +257,11 @@ for theta1 = theta1List
                         cvx_begin quiet;
                             variable x(numelx);
                             dual variable y;
-                            minimize( norm( x, 1 ) );
+                            minimize(norm(x,1));
                             subject to;
-                                y: A * x == b;
+                                y: A*x == b;
                         cvx_end;
-                        robustness = cvx_optval
+                        robustness = cvx_optval;
 
                         %xx
                         %sum(abs(b))
@@ -286,5 +315,8 @@ s2 = scatter(stateParametrisation,dimDiffMatrix,100);
 s2.Marker = '.';
 xlabel('State','Interpreter','Latex','FontSize',15);
 ylabel('$dim - dim_{max}$','Interpreter','Latex','FontSize',15);
+%Y = unique(round(inequalityMatrix,2),'rows')
+%tightInequalitiesIndices = find(~dimDiffMatrix)
+%tightInequalities = inequalityMatrix((tightInequalitiesIndices),:)
 %saveas(gcf,'dimvbound.png')
 
