@@ -196,7 +196,7 @@ fprintf("Starting...\n")
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-numPoints = 4;
+numPoints = 1;
 interval = (2*pi/numPoints);
 %angleList = [i*interval for i in range(1,numPoints)]
 angleList = linspace(0,2*pi,1);
