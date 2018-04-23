@@ -309,7 +309,7 @@ classdef classicalBoundAndDimCalculator < handle
       % CALCPROBDISTS Calculate the behaviours P(d1d2..dn|m1m2...mn) that give the classical bound from the array of local probabilities that give the classical bound.
           
           % For each set of local deterministic probabilities that give the bound calculate the behaviour.
-          probDistsGiveSMax = zeros(obj.localProbsGiveSMaxRows,obj.behaviourLength);
+          probDistsGiveSMax = zeros(obj.behaviourLength,obj.localProbsGiveSMaxRows);
           for row = 1:obj.localProbsGiveSMaxRows
               obj.probDist = zeros(1,obj.behaviourLength);
               localDetProbs = obj.localProbsGiveSMax(row,:);
@@ -328,8 +328,11 @@ classdef classicalBoundAndDimCalculator < handle
               obj.localProbsToMultiply = zeros(1,obj.noParties);
               obj.behaviourElementCounter = 1;
               calcProbDist(obj,obj.noParties);
-              % Store the probability distributions for calculation of the dimension.
-              probDistsGiveSMax(row,:) = obj.probDist;
+              % Store the probability distributions for calculation of the
+              % dimension. Note we want the probability distributions to be
+              % the columns of the matrix, not the rows.
+              column = row;
+              probDistsGiveSMax(:,column) = obj.probDist;
           end
       end
       
@@ -352,7 +355,6 @@ classdef classicalBoundAndDimCalculator < handle
       
       function [dim] = calcDim(~,probDistsGiveSMax)
       % CALCDIM Calculate the dimension of the bell inequality from the probability distributions that give the classical bound.
-      
           dim = rank(probDistsGiveSMax)-1; 
       end
       

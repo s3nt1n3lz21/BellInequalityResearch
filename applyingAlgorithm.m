@@ -138,8 +138,8 @@ A(14,:) = C(8,:);
 A(15,:) = C(14,:);
 A(16,:) = C(16,:);
 
-% Define the best possible dimension for the scenario.
-bestdimension = ((m*(d-1)+1)^n) - 1;
+% Define the best possible dimension of the Bell Inequality for the scenario.
+bestdimension = ((m*(d-1)+1)^n) - 2;
 % Get the state
 states = zeros(1,4);
 states(1,:) = [0, 1/sqrt(2), -1/sqrt(2), 0];
@@ -159,7 +159,7 @@ fprintf("Starting...\n")
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-numPoints = 1;
+numPoints = 4;
 interval = (2*pi/numPoints);
 %angleList = [i*interval for i in range(1,numPoints)]
 angleList = linspace(0,2*pi,1);
@@ -192,10 +192,10 @@ for theta1 = theta1List
                         c2 = exp(1i*phi1)*(cos(theta2)*cos(theta3)*sin(theta1));
                         c3 = exp(1i*phi2)*(cos(theta3)*sin(theta2));
                         c4 = exp(1i*phi3)*sin(theta3);
-                        %ketstate = [c1;c2;c3;c4];
+                        ketstate = [c1;c2;c3;c4];
                         numelx = size(tensorProdProjs,3);
                         b = zeros(numelx,1);
-                        ketstate = [1/sqrt(2);0;0;1/sqrt(2)];
+                        %ketstate = [1/sqrt(2);0;0;1/sqrt(2)];
                         %rho = ketstate*ketstate';
                         %trace(rho);
                         %tensorProdProjs(:,:,i1)
@@ -210,7 +210,9 @@ for theta1 = theta1List
                         %b = 0.15*b
                         %numelx = 6
                         %b = A(:,8)
-                        b = bTest
+                        %p = (sqrt(2)+2)/8;
+                        %bTest = [p;1/2-p;1/2-p;1/2-p;1/2-p;p;p;p;1/2-p;p;p;p;p;1/2-p;1/2-p;1/2-p];
+                        %b = bTest;
                         %A = ATest2;
                         % Start timing the calculation.
                         t1 = clock;
@@ -231,7 +233,27 @@ for theta1 = theta1List
                         % calculate its dimension
                         maxY = max(y.');
                         yNormalised = y.'/maxY;
-                        probCoeffList = createProbCoeffList(n,d,m,yNormalised);
+                        %yNormalised = fliplr(yNormalisedOrig)
+                        %YNormalisedNew = yNormalised;
+                        
+                        yNormalisedNew(1) = yNormalised(1);
+                        yNormalisedNew(5) = yNormalised(2);
+                        yNormalisedNew(9) = yNormalised(3);
+                        yNormalisedNew(13) = yNormalised(4);
+                        yNormalisedNew(2) = yNormalised(5);
+                        yNormalisedNew(6) = yNormalised(6);
+                        yNormalisedNew(10) = yNormalised(7);
+                        yNormalisedNew(14) = yNormalised(8);
+                        yNormalisedNew(3) = yNormalised(9);
+                        yNormalisedNew(7) = yNormalised(10);
+                        yNormalisedNew(11) = yNormalised(11);
+                        yNormalisedNew(15) = yNormalised(12);
+                        yNormalisedNew(4) = yNormalised(13);
+                        yNormalisedNew(8) = yNormalised(14);
+                        yNormalisedNew(12) = yNormalised(15);
+                        yNormalisedNew(16) = yNormalised(16);
+                        
+                        probCoeffList = createProbCoeffList(n,d,m,yNormalisedNew);
                         [dimension,smax] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList);
 
                         % Store the data.
@@ -239,7 +261,7 @@ for theta1 = theta1List
                         ketstate;
                         pointCounter;
                         ketStateMatrix;
-                        inequalityMatrix(pointCounter,:) = yNormalised;
+                        inequalityMatrix(pointCounter,:) = yNormalisedNew;
                         robustnessMatrix(pointCounter,:) = robustness;
                         dimensionMatrix(pointCounter,:) = dimension;
                         bestDimensionMatrix(pointCounter,:) = bestdimension;
@@ -277,6 +299,10 @@ s2 = scatter(stateParametrisation,dimDiffMatrix,100);
 s2.Marker = '.';
 xlabel('State','Interpreter','Latex','FontSize',15);
 ylabel('$dim - dim_{max}$','Interpreter','Latex','FontSize',15);
+ketStateMatrixUnique = unique(round(ketStateMatrix,4),'rows')
+uniqueInequalityIndices = find()
+inequalityMatrixUnique = unique(round(inequalityMatrix,4),'rows')
+
 %Y = unique(round(inequalityMatrix,2),'rows')
 %tightInequalitiesIndices = find(~dimDiffMatrix)
 %tightInequalities = inequalityMatrix((tightInequalitiesIndices),:)
