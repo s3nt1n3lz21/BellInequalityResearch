@@ -155,44 +155,7 @@ fprintf("Starting...\n")
 % solve Ax=b finding the solution which minimizes the L1 norm of x. The
 % minimum L1 norm of x is the robustness of the state. Due to duality, from this we can
 % also calculate the corresponding Bell Inequality y. This is then plugged
-% into the algorithm to calculate its dimension and classical bound.
-
-
-
-
-
-
-
-
-    % Calculate the Bell Operator b to calculate the estimation of the
-    % quantum bound.
-%     b = 0;
-%     for index = 1:length(inequalityMatrix(row,:))
-%         settings = dec2base(index-1,m+1,n)-'0';
-%         numset = length(settings);
-%         oparray = zeros(2,2,numset);
-%         for party = 1: numset
-%             settingindex = settings(party);
-%             operator = paulis(:,:,settingindex+1);
-%             oparray(:,:,party) = operator;
-%         end
-%         tensprod = kron(oparray(:,:,1),oparray(:,:,2));
-%         b = b + inequalityMatrix(row,index)*kron(tensprod,oparray(:,:,3));
-%     end
-    
-    % Calculate the eigenvalue.
-%     [matrixeigvec,matrixeig] = eig(b);
-%     
-%     eigenvalues = zeros(1,length(matrixeig));
-%     for i1 = 1:length(matrixeig)
-%     eigenvalues(i1) = matrixeig(i1,i1);
-%     end
-%     quantum = max(eigenvalues);
-% %     index = find(eigenvalues == quantum);
-% %     beststate = matrixeigvec(:,index);
-   
-%     quantumboundmatrix(row,:) = quantum;
-%     beststatematrix(row,:) = beststate.';       
+% into the algorithm to calculate its dimension and classical bound.    
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -229,11 +192,10 @@ for theta1 = theta1List
                         c2 = exp(1i*phi1)*(cos(theta2)*cos(theta3)*sin(theta1));
                         c3 = exp(1i*phi2)*(cos(theta3)*sin(theta2));
                         c4 = exp(1i*phi3)*sin(theta3);
-                        ketstate = [c1;c2;c3;c4];
+                        %ketstate = [c1;c2;c3;c4];
                         numelx = size(tensorProdProjs,3);
                         b = zeros(numelx,1);
-                        
-                        %ketstate = [1/sqrt(2);0;0;1/sqrt(2)];
+                        ketstate = [1/sqrt(2);0;0;1/sqrt(2)];
                         %rho = ketstate*ketstate';
                         %trace(rho);
                         %tensorProdProjs(:,:,i1)
@@ -248,7 +210,7 @@ for theta1 = theta1List
                         %b = 0.15*b
                         %numelx = 6
                         %b = A(:,8)
-                        %b = bTest
+                        b = bTest
                         %A = ATest2;
                         % Start timing the calculation.
                         t1 = clock;
@@ -320,3 +282,13 @@ ylabel('$dim - dim_{max}$','Interpreter','Latex','FontSize',15);
 %tightInequalities = inequalityMatrix((tightInequalitiesIndices),:)
 %saveas(gcf,'dimvbound.png')
 
+%Testing
+%p = (sqrt(2)+2)/8
+%bTest = [p;1/2-p;1/2-p;1/2-p;1/2-p;p;p;p;1/2-p;p;p;p;p;1/2-p;1/2-p;1/2-p]
+%yNormalised*b =2rrot2 which is right because b is the optimal measurements
+%on a maximially entangled state?
+%chsh = [1 -1 -1 1 1 -1 -1 1 1 -1 -1 1 -1 1 1 -1];
+%chsh*b does not produce 2root2 suggesting chsh and b are in different
+%orders.
+%probCoeffList = createProbCoeffList(n,d,m,chsh);
+%%[dimension,smax] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList);
