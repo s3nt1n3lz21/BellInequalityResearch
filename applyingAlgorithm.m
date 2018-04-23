@@ -329,4 +329,4 @@ ylabel('$dim - dim_{max}$','Interpreter','Latex','FontSize',15);
 %chsh*b does not produce 2root2 suggesting chsh and b are in different
 %orders.
 %probCoeffList = createProbCoeffList(n,d,m,chsh);
-%[dimension,smax] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList);
+%%[dimension,smax] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList);
