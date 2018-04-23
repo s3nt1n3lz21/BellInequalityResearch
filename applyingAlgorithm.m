@@ -155,44 +155,7 @@ fprintf("Starting...\n")
 % solve Ax=b finding the solution which minimizes the L1 norm of x. The
 % minimum L1 norm of x is the robustness of the state. Due to duality, from this we can
 % also calculate the corresponding Bell Inequality y. This is then plugged
-% into the algorithm to calculate its dimension and classical bound.
-
-
-
-
-
-
-
-
-    % Calculate the Bell Operator b to calculate the estimation of the
-    % quantum bound.
-%     b = 0;
-%     for index = 1:length(inequalityMatrix(row,:))
-%         settings = dec2base(index-1,m+1,n)-'0';
-%         numset = length(settings);
-%         oparray = zeros(2,2,numset);
-%         for party = 1: numset
-%             settingindex = settings(party);
-%             operator = paulis(:,:,settingindex+1);
-%             oparray(:,:,party) = operator;
-%         end
-%         tensprod = kron(oparray(:,:,1),oparray(:,:,2));
-%         b = b + inequalityMatrix(row,index)*kron(tensprod,oparray(:,:,3));
-%     end
-    
-    % Calculate the eigenvalue.
-%     [matrixeigvec,matrixeig] = eig(b);
-%     
-%     eigenvalues = zeros(1,length(matrixeig));
-%     for i1 = 1:length(matrixeig)
-%     eigenvalues(i1) = matrixeig(i1,i1);
-%     end
-%     quantum = max(eigenvalues);
-% %     index = find(eigenvalues == quantum);
-% %     beststate = matrixeigvec(:,index);
-   
-%     quantumboundmatrix(row,:) = quantum;
-%     beststatematrix(row,:) = beststate.';       
+% into the algorithm to calculate its dimension and classical bound.    
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -232,7 +195,6 @@ for theta1 = theta1List
                         %ketstate = [c1;c2;c3;c4];
                         numelx = size(tensorProdProjs,3);
                         b = zeros(numelx,1);
-                        
                         ketstate = [1/sqrt(2);0;0;1/sqrt(2)];
                         %rho = ketstate*ketstate';
                         %trace(rho);
@@ -316,7 +278,7 @@ s2.Marker = '.';
 xlabel('State','Interpreter','Latex','FontSize',15);
 ylabel('$dim - dim_{max}$','Interpreter','Latex','FontSize',15);
 %Y = unique(round(inequalityMatrix,2),'rows')
-%tightInequalitiesIndices = find(~dimDiffMatrix)+
+%tightInequalitiesIndices = find(~dimDiffMatrix)
 %tightInequalities = inequalityMatrix((tightInequalitiesIndices),:)
 %saveas(gcf,'dimvbound.png')
 
