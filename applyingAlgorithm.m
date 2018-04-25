@@ -231,10 +231,14 @@ for theta1 = theta1List
                         %sum(abs(b))
                         % Apply my algorithm to this inequality and
                         % calculate its dimension
-                        maxY = max(y.');
-                        yNormalised = y.'/maxY;
+                        
+                        %maxY = max(abs(y.'));
+                        %yNormalised = y.'/maxY;
+                        
                         %yNormalised = fliplr(yNormalisedOrig)
                         %YNormalisedNew = yNormalised;
+                        
+                        yNormalised = y.';
                         
                         yNormalisedNew(1) = yNormalised(1);
                         yNormalisedNew(5) = yNormalised(2);
@@ -294,14 +298,18 @@ data = table(robustnessMatrix,inequalityMatrix,dimensionMatrix,bestDimensionMatr
 
 %xfit = bounddiffmatrix;
 %yfit = dimDiffMatrix;
-stateParametrisation = 1:totalNumPoints;
-s2 = scatter(stateParametrisation,dimDiffMatrix,100);
+dimDiffMatrixLessPoly = dimDiffMatrix(dimDiffMatrix<1);
+stateParametrisation = 1:size(dimDiffMatrixLessPoly);
+s2 = scatter(stateParametrisation,dimDiffMatrixLessPoly,100);
 s2.Marker = '.';
 xlabel('State','Interpreter','Latex','FontSize',15);
 ylabel('$dim - dim_{max}$','Interpreter','Latex','FontSize',15);
-ketStateMatrixUnique = unique(round(ketStateMatrix,4),'rows')
-uniqueInequalityIndices = find()
-inequalityMatrixUnique = unique(round(inequalityMatrix,4),'rows')
+inequalities = inequalityMatrix(dimDiffMatrix<1,:);
+uniqueInequalities = unique(round(inequalities,4),'rows');
+%dimDiffMatrixLess8 = dimDiffMatrix(dimDiffMatrix<1);
+%ketStateMatrixUnique = unique(round(ketStateMatrix,4),'rows')
+%uniqueInequalityIndices = find()
+%inequalityMatrixUnique = unique(round(inequalityMatrix,4),'rows')
 
 %Y = unique(round(inequalityMatrix,2),'rows')
 %tightInequalitiesIndices = find(~dimDiffMatrix)
