@@ -26,6 +26,7 @@ projs = zeros(2,2,m*d);
 
 %Define the sigma measurement operators
 sigmaX = ket0*ket1'+ket1*ket0';
+sigmaY = [0,-1i;1i,0]
 sigmaZ = ket0*ket0'-ket1*ket1';
 
 % %Alices measurements
@@ -57,58 +58,108 @@ phi2 = [sqrt(2)/2;(sqrt(2)/2)*(cos(5*pi/8)+1i*sin(5*pi/8))]
 %phi1 = [sqrt(2)/2;(sqrt(2)/2)*(cos(0*pi/8)+1i*sin(0*pi/8))]
 %phi2 = [sqrt(2)/2;(sqrt(2)/2)*(cos(pi/2)+1i*sin(pi/2))]
 
+%phi1 = 
+
 % %Alices measurements
-measurements(:,:,1) = phi1*phi1';
-measurements(:,:,2) = phi2*phi2';
+measurements(:,:,1,1) = phi1*phi1';
+measurements(:,:,1,2) = phi2*phi2';
 
 % %Bobs measurements
-measurements(:,:,3) = phi1*phi1';
-measurements(:,:,4) = phi2*phi2';
+measurements(:,:,2,1) = phi1*phi1';
+measurements(:,:,2,2) = phi2*phi2';
 
-%Calculate the eigenvectors and projectors of Alices measurements
-[eigenvectorsMatrix,~] = eig(measurements(:,:,1));
-projs(:,:,1) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,1); %|\psi><\psi|A = \lambda|\psi><\psi|
-projs(:,:,2) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,1);
-[eigenvectorsMatrix,~] = eig(measurements(:,:,2));
-projs(:,:,3) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,2);
-projs(:,:,4) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,2);
+% % %Alices measurements
+% measurements(:,:,1,1) = sigmaX;
+% measurements(:,:,1,2) = sigmaY;
+% measurements(:,:,1,3) = sigmaZ;
+% 
+% % %Bobs measurements
+% measurements(:,:,2,1) = sigmaX;
+% measurements(:,:,2,2) = sigmaY;
+% measurements(:,:,2,3) = sigmaZ;
 
-%Calculate the eigenvectors and projectors of Bobs measurements
-[eigenvectorsMatrix,~] = eig(measurements(:,:,3));
-projs(:,:,5) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,3);
-projs(:,:,6) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,3);
-[eigenvectorsMatrix,~] = eig(measurements(:,:,4));
-projs(:,:,7) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,4);
-projs(:,:,8) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,4);
+%Calculate the eigenvectors and projectors for each parties' measurements
+for iN = 1:n
+    for iM = 1:m
+        [eigenvectorsMatrix,~] = eig(measurements(:,:,1,1));
+        for iD = 1:d
+            projs(:,:,iN,iD,iM) = eigenvectorsMatrix(:,iD)*eigenvectorsMatrix(:,iD)'
+        end
+    end
+end
+
+% %Calculate the eigenvectors and projectors of Alices measurements
+% [eigenvectorsMatrix,~] = eig(measurements(:,:,1,1));
+% projs(:,:,1,1,1) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,1); %|\psi><\psi|A = \lambda|\psi><\psi|
+% projs(:,:,1,2,1) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,1);
+% [eigenvectorsMatrix,~] = eig(measurements(:,:,1,2));
+% projs(:,:,1,1,2) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,2);
+% projs(:,:,1,2,2) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,2);
+% [eigenvectorsMatrix,~] = eig(measurements(:,:,1,3));
+% projs(:,:,1,1,3) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,2);
+% projs(:,:,1,2,3) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,2);
+% 
+% %Calculate the eigenvectors and projectors of Bobs measurements
+% [eigenvectorsMatrix,~] = eig(measurements(:,:,2,1));
+% projs(:,:,2,1,1) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,3);
+% projs(:,:,2,2,1) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,3);
+% [eigenvectorsMatrix,~] = eig(measurements(:,:,2,2));
+% projs(:,:,2,1,2) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,4);
+% projs(:,:,2,2,2) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,4);
+% [eigenvectorsMatrix,~] = eig(measurements(:,:,2,3));
+% projs(:,:,2,1,3) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,4);
+% projs(:,:,2,2,3) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,4);
 
 % Create an array of all the possible tensor products of these projectors
 % ensuring that the probabilities in b will be in the right order.
+
+D1 = d
+D2 = d
+M1 = m
+M2 = m
+
 tensorProdProjs = zeros(2^n,2^n,(m*d)^n);
+
 ind = 1;
-for i1 = [1,3]
-    for i2 = [5,7]
-        tensorProdProjs(:,:,ind) = kron(projs(:,:,i1),projs(:,:,i2));
-        ind = ind+1;
+for d1 = 1:D1
+    for d2 = 1:D2
+        for m1 = 1:M1
+            for m2 = 1:M2
+                x = [d1,d2,m1,m2];
+                display(x)
+                tensorProdProjs(:,:,ind) = kron(projs(:,:,1,m1,d1),projs(:,:,2,m2,d2));
+                ind = ind + 1;
+            end
+        end
     end
 end
-for i1 = [1,3]
-    for i2 = [6,8]
-        tensorProdProjs(:,:,ind) = kron(projs(:,:,i1),projs(:,:,i2));
-        ind = ind+1;
-    end
-end
-for i1 = [2,4]
-    for i2 = [5,7]
-        tensorProdProjs(:,:,ind) = kron(projs(:,:,i1),projs(:,:,i2));
-        ind = ind+1;
-    end
-end
-for i1 = [2,4]
-    for i2 = [6,8]
-        tensorProdProjs(:,:,ind) = kron(projs(:,:,i1),projs(:,:,i2));
-        ind = ind+1;
-    end
-end
+
+% tensorProdProjs = zeros(2^n,2^n,(m*d)^n);
+% ind = 1;
+% for i1 = [1,3]
+%     for i2 = [5,7]
+%         tensorProdProjs(:,:,ind) = kron(projs(:,:,i1),projs(:,:,i2));
+%         ind = ind+1;
+%     end
+% end
+% for i1 = [1,3]
+%     for i2 = [6,8]
+%         tensorProdProjs(:,:,ind) = kron(projs(:,:,i1),projs(:,:,i2));
+%         ind = ind+1;
+%     end
+% end
+% for i1 = [2,4]
+%     for i2 = [5,7]
+%         tensorProdProjs(:,:,ind) = kron(projs(:,:,i1),projs(:,:,i2));
+%         ind = ind+1;
+%     end
+% end
+% for i1 = [2,4]
+%     for i2 = [6,8]
+%         tensorProdProjs(:,:,ind) = kron(projs(:,:,i1),projs(:,:,i2));
+%         ind = ind+1;
+%     end
+% end
 
 %Put the numbers n,m,d into the correct form for input to the
 %extremalPointLooper class.

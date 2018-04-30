@@ -240,7 +240,6 @@ classdef classicalBoundAndDimCalculator < handle
                         end
                     end
                 end
-                s
                 % If the maximum Bell value is not yet defined then set its value to the result of the first calculation. Store the set of local probabilities that give the current maximum Bell value. 
                 if obj.sMax == 'x'
                   obj.sMax = s;
@@ -356,7 +355,7 @@ classdef classicalBoundAndDimCalculator < handle
       
       function [dim] = calcDim(~,probDistsGiveSMax)
       % CALCDIM Calculate the dimension of the bell inequality from the probability distributions that give the classical bound.
-          dim = rank(probDistsGiveSMax)-1; 
+          dim = rank(probDistsGiveSMax)-1;
       end
       
    end

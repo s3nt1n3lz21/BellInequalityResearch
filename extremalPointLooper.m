@@ -117,6 +117,7 @@ classdef extremalPointLooper < handle
                 
                 % Calculate the behaviour (probability distribution vector) from the values of the local probabilities
                 calcProbDist(obj);
+                %obj.probDist
                 obj.matrixA(:,obj.matrixAColumnCounter) = obj.probDist;
                 obj.matrixAColumnCounter = obj.matrixAColumnCounter + 1;
           end
