@@ -159,7 +159,7 @@ fprintf("Starting...\n")
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-numPoints = 4;
+numPoints = 1;
 interval = (2*pi/numPoints);
 %angleList = [i*interval for i in range(1,numPoints)]
 angleList = linspace(0,2*pi,1);
@@ -196,6 +196,7 @@ for theta1 = theta1List
                         numelx = size(tensorProdProjs,3);
                         b = zeros(numelx,1);
                         %ketstate = [1/sqrt(2);0;0;1/sqrt(2)];
+                        ketstate = [cos(pi/8),0,0,sin(pi/8)];
                         %rho = ketstate*ketstate';
                         %trace(rho);
                         %tensorProdProjs(:,:,i1)
@@ -210,9 +211,9 @@ for theta1 = theta1List
                         %b = 0.15*b
                         %numelx = 6
                         %b = A(:,8)
-                        %p = (sqrt(2)+2)/8;
-                        %bTest = [p;1/2-p;1/2-p;1/2-p;1/2-p;p;p;p;1/2-p;p;p;p;p;1/2-p;1/2-p;1/2-p];
-                        %b = bTest;
+                        p = (sqrt(2)+2)/8;
+                        bTest = [p;1/2-p;1/2-p;1/2-p;1/2-p;p;p;p;1/2-p;p;p;p;p;1/2-p;1/2-p;1/2-p];
+                        b = bTest;
                         %A = ATest2;
                         % Start timing the calculation.
                         t1 = clock;
@@ -232,13 +233,13 @@ for theta1 = theta1List
                         % Apply my algorithm to this inequality and
                         % calculate its dimension
                         
-                        %maxY = max(abs(y.'));
-                        %yNormalised = y.'/maxY;
+                        maxY = max(abs(y.'));
+                        yNormalised = y.'/maxY;
                         
                         %yNormalised = fliplr(yNormalisedOrig)
                         %YNormalisedNew = yNormalised;
                         
-                        yNormalised = y.';
+                        %yNormalised = y.';
                         
                         yNormalisedNew(1) = yNormalised(1);
                         yNormalisedNew(5) = yNormalised(2);
@@ -326,3 +327,8 @@ uniqueInequalities = unique(round(inequalities,4),'rows');
 %orders.
 %probCoeffList = createProbCoeffList(n,d,m,chsh);
 %%[dimension,smax] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList);
+
+%y = uniqueInequalities(1,:)
+%yNew = y/max(abs(y))
+%probCoeffList = createProbCoeffList(n,d,m,yNew)
+%[dimension,smax] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
