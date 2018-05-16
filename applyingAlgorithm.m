@@ -1,10 +1,3 @@
-% In this algorithm we apply the algorithm to the Bell Inequalities found by using some quantum states and measurement projectors. 
-% In this file we calculate the robustness and the Bell inequality of each state and
-% then apply this algorithm to these Bell inequalities.
-
-% Calculate the matrix A for CHSH by defining a class to loop over all of
-% the extremal points and calculate their vectors. The matrix A has columns
-% that are the behaviours of these extremal points.
 fprintf("Initialising...\n")
 
 % There are two qubits so n = 2, and there are two possible measurement
@@ -14,42 +7,14 @@ n = 2;
 d = 2;
 m = 2;
 
-% Define the projection operators for CHSH. There are d projectors for the
-% different outcomes of each measurement. If there are m different types of
-% measurement each with a different basis then there are m*d projectors in
-% total.
-ket0 = [1; 0];
-ket1 = [0; 1];
-ketPlus = (1/sqrt(2))*(ket0+ket1);
-ketMinus = (1/sqrt(2))*(ket0-ket1);
 projs = zeros(2,2,m*d);
 
-%Define the sigma measurement operators
-sigmaX = ket0*ket1'+ket1*ket0';
-sigmaZ = ket0*ket0'-ket1*ket1';
-
-% %Alices measurements
-% projs(:,:,1) = ket0*ket0';
-% projs(:,:,2) = ket1*ket1';
-% 
-% %Bobs measurements
-% projs(:,:,3) = ketPlus*ketPlus';
-% projs(:,:,4) = ketMinus*ketMinus';
-
-%Define Alices measurements
-% measurements(:,:,1) = sigmaZ;
-% measurements(:,:,2) = sigmaX;
-
-%Define Bobs measurements
-% measurements(:,:,3) = (1/sqrt(2))*(sigmaZ+sigmaX);
-% measurements(:,:,4) = (1/sqrt(2))*(sigmaZ-sigmaX);
-
 %Define Alice and Bobs local measurements, they make the same measurements
-%phi1 = [sqrt(2)/2;sqrt(2)/2]
-%phi2 = [sqrt(2)/2;(sqrt(2)/2)*(cos(pi/3)+1i*sin(pi/3))]
+phi1 = [sqrt(2)/2;sqrt(2)/2]
+phi2 = [sqrt(2)/2;(sqrt(2)/2)*(cos(pi/3)+1i*sin(pi/3))]
 
-phi1 = [sqrt(2)/2;(sqrt(2)/2)*(cos(pi/8)+1i*sin(pi/8))]
-phi2 = [sqrt(2)/2;(sqrt(2)/2)*(cos(5*pi/8)+1i*sin(5*pi/8))]
+%phi1 = [sqrt(2)/2;(sqrt(2)/2)*(cos(pi/8)+1i*sin(pi/8))]
+%phi2 = [sqrt(2)/2;(sqrt(2)/2)*(cos(5*pi/8)+1i*sin(5*pi/8))]
 
 %phi1 = [sqrt(2)/2;(sqrt(2)/2)*(cos(7*pi/8)+1i*sin(7*pi/8))]
 %phi2 = [sqrt(2)/2;(sqrt(2)/2)*(cos(3*pi/8)+1i*sin(3*pi/8))]
@@ -67,19 +32,19 @@ measurements(:,:,4) = phi2*phi2';
 
 %Calculate the eigenvectors and projectors of Alices measurements
 [eigenvectorsMatrix,~] = eig(measurements(:,:,1));
-projs(:,:,1) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,1); %|\psi><\psi|A = \lambda|\psi><\psi|
-projs(:,:,2) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,1);
+projs(:,:,1) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'
+projs(:,:,2) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'
 [eigenvectorsMatrix,~] = eig(measurements(:,:,2));
-projs(:,:,3) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,2);
-projs(:,:,4) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,2);
+projs(:,:,3) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'
+projs(:,:,4) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'
 
 %Calculate the eigenvectors and projectors of Bobs measurements
 [eigenvectorsMatrix,~] = eig(measurements(:,:,3));
-projs(:,:,5) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,3);
-projs(:,:,6) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,3);
+projs(:,:,5) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'
+projs(:,:,6) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'
 [eigenvectorsMatrix,~] = eig(measurements(:,:,4));
-projs(:,:,7) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'%*measurements(:,:,4);
-projs(:,:,8) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'%*measurements(:,:,4);
+projs(:,:,7) = eigenvectorsMatrix(:,1)*eigenvectorsMatrix(:,1)'
+projs(:,:,8) = eigenvectorsMatrix(:,2)*eigenvectorsMatrix(:,2)'
 
 % Create an array of all the possible tensor products of these projectors
 % ensuring that the probabilities in b will be in the right order.
@@ -110,26 +75,18 @@ for i1 = [2,4]
     end
 end
 
-%Put the numbers n,m,d into the correct form for input to the
-%extremalPointLooper class.
+%Create the measurement outcome list for the calculation of A and facet
+%dimension of the inequalities
 dListElement = (ones(1,m)*d);
 for i1 = 1:n
     maxNoMeasOutcomesList(:,i1) = {dListElement'};
 end
 
-% Create an instance of a extremalPointLooper class
-instance = extremalPointLooper(maxNoMeasOutcomesList);
 % Calculate the matrix A
+instance = extremalPointLooper(maxNoMeasOutcomesList);
 C = calc(instance);
+%Transform C into the right form (into A)
 A = C;
-% A(3,:) = C(5,:);
-% A(4,:) = C(6,:);
-% A(5,:) = C(3,:);
-% A(6,:) = C(4,:);
-% A(11,:) = C(13,:);
-% A(12,:) = C(14,:);
-% A(13,:) = C(11,:);
-% A(14,:) = C(12,:);
 A(1,:) = C(1,:);
 A(2,:) = C(3,:);
 A(3,:) = C(9,:);
@@ -149,33 +106,23 @@ A(16,:) = C(16,:);
 
 % Define the best possible dimension of the Bell Inequality for the scenario.
 bestdimension = ((m*(d-1)+1)^n) - 2;
-% Get the state
-states = zeros(1,4);
-states(1,:) = [0, 1/sqrt(2), -1/sqrt(2), 0];
-%states(2,:) = [3/8, 1/8, 1/8, 3/8];
-numrows = size(states,1);
-
-% Create arrays to hold all of the data.
-%stateMatrix = zeros(numrows,8);
 
 fprintf("Starting...\n")
 
-% Looping over each state calculate the decomposition of the state and
-% solve Ax=b finding the solution which minimizes the L1 norm of x. The
-% minimum L1 norm of x is the robustness of the state. Due to duality, from this we can
-% also calculate the corresponding Bell Inequality y. This is then plugged
-% into the algorithm to calculate its dimension and classical bound.    
+% Looping over each state solve Ax=b finding the solution which minimizes 
+% the L1 norm of x. Calculate the corresponding Bell Inequality y. 
+% Calculate the facet dimension and maximum classical correlation using 
+% the facet dimension algorithm   
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-numPoints = 1;
-interval = (2*pi/numPoints);
-%angleList = [i*interval for i in range(1,numPoints)]
-angleList = linspace(0,2*pi,1);
-theta1List = linspace(0,2*pi,numPoints);
-pointCounter = 1;
-totalNumPoints = numPoints^6;
+numPoints = 4; %The number of values for each angle (theta1,theta2,...)
+interval = (2*pi/numPoints); %The interval between these values
+angleList = linspace(0,2*pi,numPoints);
+row = 1; %Initialise the row
+totalNumPoints = numPoints^6; %The total number of states to loop over
 
+%Create arrays to store the data
 robustnessMatrix = zeros(totalNumPoints,1);
 ketStateMatrix = zeros(totalNumPoints,2^d);
 inequalityMatrix = zeros(totalNumPoints,(m*d)^n);
@@ -183,52 +130,38 @@ dimensionMatrix = zeros(totalNumPoints,1);
 bestDimensionMatrix = zeros(totalNumPoints,1);
 dimDiffMatrix = zeros(totalNumPoints,1);
 classicalBoundMatrix = zeros(totalNumPoints,1);
+sMaxMatrix = zeros(totalNumPoints,1);
+anglesMatrix = zeros(totalNumPoints,6);
 
 %Looping over all the different values of the parameters
-for theta1 = theta1List
-    for theta2 = theta1List
-        for theta3 = theta1List
-            for phi1 = theta1List
-                for phi2 = theta1List
-                    for phi3 = theta1List
-                        %theta1;
-                        %theta2;
-                        %theta3;
-                        %phi1;
-                        %phi2;
-                        %phi3;
+for theta1 = angleList
+    for theta2 = angleList
+        for theta3 = angleList
+            for phi1 = angleList
+                for phi2 = angleList
+                    for phi3 = angleList
+                        
+                        %Calculate the complex coefficients
                         c1 = cos(theta1)*cos(theta2)*cos(theta3);
                         c2 = exp(1i*phi1)*(cos(theta2)*cos(theta3)*sin(theta1));
                         c3 = exp(1i*phi2)*(cos(theta3)*sin(theta2));
                         c4 = exp(1i*phi3)*sin(theta3);
+                        
+                        %Store the angles
+                        angles = [theta1,theta2,theta3,phi1,phi2,phi3];
                         ketstate = [c1;c2;c3;c4];
-                        numelx = size(tensorProdProjs,3);
-                        b = zeros(numelx,1);
-                        ketstate = [1/sqrt(2);0;0;1/sqrt(2)];
-                        %ketstate = [cos(pi/8),0,0,sin(pi/8)];
                         rho = ketstate*ketstate';
-                        %trace(rho);
-                        %tensorProdProjs(:,:,i1)
-                        
-                        %U = [(cos(pi/16)-1i*sin(pi/16)),0;0,(cos(pi/16)+1i*sin(pi/16))]
-                        %rotation = kron(U,U)
-                        %rho = ketstate*ketstate'
-                        %rho = rotation*rho
-                        
+                        numelx = size(tensorProdProjs,3);
+                       
+                        %Fix the state for tests
+                        %ketstate = [1/sqrt(2);0;0;1/sqrt(2)];
+                                            
                         %Calculate the vector b
+                        b = zeros(numelx,1);
                         for i1 = 1:numelx
-                            %tensorProdProjs(:,:,i1)
-                            %trace(tensorProdProjs(:,:,i1))
                             b(i1) = real(trace(rho*tensorProdProjs(:,:,i1)));
-                        end
-                        
-                        %b = 0.15*b
-                        %numelx = 6
-                        %b = A(:,8)
-                        p = (sqrt(2)+2)/8;
-                        %bTest = [p;1/2-p;1/2-p;1/2-p;1/2-p;p;p;p;1/2-p;p;p;p;p;1/2-p;1/2-p;1/2-p];
-                        %b = bTest;
-                        %A = ATest2;
+                        end                   
+
                         % Start timing the calculation.
                         t1 = clock;
     
@@ -242,19 +175,12 @@ for theta1 = theta1List
                         cvx_end;
                         robustness = cvx_optval;
 
-                        %xx
-                        %sum(abs(b))
-                        % Apply my algorithm to this inequality and
-                        % calculate its dimension
-                        
+                        %Renormalise these inequalities
                         maxY = max(abs(y.'));
                         yNormalised = y.'/maxY;
                         
-                        %yNormalised = fliplr(yNormalisedOrig)
-                        %YNormalisedNew = yNormalised;
-                        
-                        %yNormalised = y.';
-                        
+                        %Transform the inequality into the right form for
+                        %input into the facet dimension algorithm
                         yNormalisedNew(1) = yNormalised(1);
                         yNormalisedNew(5) = yNormalised(2);
                         yNormalisedNew(9) = yNormalised(3);
@@ -271,34 +197,35 @@ for theta1 = theta1List
                         yNormalisedNew(8) = yNormalised(14);
                         yNormalisedNew(12) = yNormalised(15);
                         yNormalisedNew(16) = yNormalised(16);
-                        
+                                        
+                        % Apply the facet dimension algorithm to this inequality and calculate its dimension
                         probCoeffList = createProbCoeffList(n,d,m,yNormalisedNew);
                         [dimension,smax] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList);
 
-                        % Store the data.
-                        ketStateMatrix(pointCounter,:) = ketstate;
-                        ketstate;
-                        pointCounter;
-                        ketStateMatrix;
-                        inequalityMatrix(pointCounter,:) = yNormalisedNew;
-                        robustnessMatrix(pointCounter,:) = robustness;
-                        dimensionMatrix(pointCounter,:) = dimension;
-                        bestDimensionMatrix(pointCounter,:) = bestdimension;
-                        dimDiffMatrix(pointCounter,:) = dimension - bestdimension;   
+                        % Store the data
+                        ketStateMatrix(row,:) = ketstate;
+                        inequalityMatrix(row,:) = yNormalisedNew;
+                        robustnessMatrix(row,:) = robustness;
+                        dimensionMatrix(row,:) = dimension;
+                        bestDimensionMatrix(row,:) = bestdimension;
+                        dimDiffMatrix(row,:) = dimension - bestdimension;
+                        sMaxMatrix(row,:) = smax;
+                        anglesMatrix(row,:) = angles;
 
-                        T.Properties.RowNames = pointCounter;
+                        T.Properties.RowNames = row;
 
-                        % End timing the calculation.
+                        % Stop timing the calculation.
                         t2 = clock;
                         % Calculate the time taken for this calculation.
                         numsecs = etime(t2,t1);
                         % Add this to an array.
-                        numsecsarray(pointCounter) = numsecs;
+                        numsecsarray(row) = numsecs;
                         % Calculate the estimated time left in seconds, from the average time taken per calculation.
-                        timeleftsecs = (totalNumPoints-pointCounter)*mean(numsecsarray);
-                        pointCounter = pointCounter + 1;
+                        timeleftsecs = (totalNumPoints-row)*mean(numsecsarray);
+                        row = row + 1;
                         % Print out the estimated time left.
                         estimatedtimeleft = datestr(timeleftsecs/(24*60*60), 'DD:HH:MM:SS.FFF')
+                        row
                     end
                 end
             end
@@ -306,50 +233,34 @@ for theta1 = theta1List
     end
 end
 
-% Put all the data into a table.
-% bounddiffmatrix = quantumboundmatrix-classicalBoundMatrix;
-
-data = table(robustnessMatrix,inequalityMatrix,dimensionMatrix,bestDimensionMatrix,dimDiffMatrix); % quantumboundmatrix,bounddiffmatrix
-
-%xfit = bounddiffmatrix;
-%yfit = dimDiffMatrix;
-dimDiffMatrixLessPoly = dimDiffMatrix(dimDiffMatrix<1);
-stateParametrisation = 1:size(dimDiffMatrixLessPoly);
-s2 = scatter(stateParametrisation,dimDiffMatrixLessPoly,100);
+%Plot the dimension difference for each of these inequalities
+stateParametrisation = 1:numPoints^6;
+s2 = scatter(stateParametrisation,dimDiffMatrix,100);
 s2.Marker = '.';
 xlabel('State','Interpreter','Latex','FontSize',15);
 ylabel('$dim - dim_{max}$','Interpreter','Latex','FontSize',15);
-inequalities = inequalityMatrix(dimDiffMatrix<1,:);
+
+minSMax = 999;
+maxSMax = 0;
+%Calculate how many of these have a dimension of 8
+inequalities = inequalityMatrix(dimDiffMatrix==1,:);
+numTrivialInequalities = size(inequalities,1)
+%Calculate how many of these are unique
 uniqueInequalities = unique(round(inequalities,4),'rows');
-%dimDiffMatrixLess8 = dimDiffMatrix(dimDiffMatrix<1);
-%ketStateMatrixUnique = unique(round(ketStateMatrix,4),'rows')
-%uniqueInequalityIndices = find()
-%inequalityMatrixUnique = unique(round(inequalityMatrix,4),'rows')
+numUniqueTrivialInequalities = size(uniqueInequalities,1)
+%Check how s varies for the 8 dimensional inequalities
+minSMax = min(sMaxMatrix(dimDiffMatrix==1))
+maxSMax = max(sMaxMatrix(dimDiffMatrix==1))
 
-%Y = unique(round(inequalityMatrix,2),'rows')
-%tightInequalitiesIndices = find(~dimDiffMatrix)
-%tightInequalities = inequalityMatrix((tightInequalitiesIndices),:)
-%saveas(gcf,'dimvbound.png')
+minSMax = 999;
+maxSMax = 0;
+%Calculate how many of these have a dimension == maxdimension (7)
+inequalities = inequalityMatrix(dimDiffMatrix==0,:);
+numTightInequalities = size(inequalities,1)
+%Calculate how many of these are unique
+uniqueInequalities = unique(round(inequalities,4),'rows');
+numUniqueTightInequalities = size(uniqueInequalities,1)
+%Check how s varies for these tight Bell Inequalities
+minSMax = min(sMaxMatrix(dimDiffMatrix==0))
+maxSMax = max(sMaxMatrix(dimDiffMatrix==0))
 
-%Testing
-%p = (sqrt(2)+2)/8
-%bTest = [p;1/2-p;1/2-p;1/2-p;1/2-p;p;p;p;1/2-p;p;p;p;p;1/2-p;1/2-p;1/2-p]
-%yNormalised*b =2rrot2 which is right because b is the optimal measurements
-%on a maximially entangled state
-%chsh = [1 -1 -1 1 1 -1 -1 1 1 -1 -1 1 -1 1 1 -1];
-%chsh*b does not produce 2root2 suggesting chsh and b are in different
-%orders.
-%probCoeffList = createProbCoeffList(n,d,m,chsh);
-%%[dimension,smax] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList);
-
-%y = uniqueInequalities(1,:)
-%yNew = y/max(abs(y))
-%probCoeffList = createProbCoeffList(n,d,m,yNew)
-%[dimension,smax] = calcdimandclassicalbound(maxNoMeasOutcomesList,probCoeffList)
-
-
-%bellOperator = zeros(2^n,2^n)
-%for i1 = 1:size(yNormalised,2)
-%    bellOperator = bellOperator + yNormalised(i1)*tensorProdProjs(:,:,i1)
-%end
-%s = trace(bellOperator*rho)
