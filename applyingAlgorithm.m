@@ -116,7 +116,7 @@ fprintf("Starting...\n")
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-numPoints = 4; %The number of values for each angle (theta1,theta2,...)
+numPoints = 1; %The number of values for each angle (theta1,theta2,...)
 interval = (2*pi/numPoints); %The interval between these values
 angleList = linspace(0,2*pi,numPoints);
 row = 1; %Initialise the row
@@ -150,11 +150,14 @@ for theta1 = angleList
                         %Store the angles
                         angles = [theta1,theta2,theta3,phi1,phi2,phi3];
                         ketstate = [c1;c2;c3;c4];
+                        
+                        %Fix the state for tests
+                        ketstate = [1/sqrt(2);0;0;1/sqrt(2)];
+                        
                         rho = ketstate*ketstate';
                         numelx = size(tensorProdProjs,3);
                        
-                        %Fix the state for tests
-                        %ketstate = [1/sqrt(2);0;0;1/sqrt(2)];
+
                                             
                         %Calculate the vector b
                         b = zeros(numelx,1);
