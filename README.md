@@ -14,3 +14,5 @@ You can find the detailed content and publications [here](https://s3nt1n3lz21.gi
 - [Thesis Part 1](thesisPart1.pdf)
 - [Thesis Part 2](thesisPart2.pdf)
 - [Thesis Poster](poster.pdf)
+
+![Thesis Poster](poster.jpg)
