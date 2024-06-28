@@ -6,7 +6,7 @@
 **Contact Info:** [neilcsmith21@gmail.com](mailto:neilcsmith21@gmail.com)  
 **Affiliation:** The University Of Sheffield
 
-You can find the detailed content and publications [here](https://your-username.github.io/your-repo-name/).
+You can find the detailed content and publications [here](https://s3nt1n3lz21.github.io/BellInequalityResearch/).
 
 ## Publications
 
