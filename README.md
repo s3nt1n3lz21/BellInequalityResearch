@@ -9,11 +9,11 @@
 ## Publications
 
 ### Documents
-- [Thesis Part 1](thesisPart1.pdf)
-- [Thesis Part 2](thesisPart2.pdf)
-- [Thesis Poster](poster.pdf)
+- [Thesis Part 1](./docs/thesisPart1.pdf)
+- [Thesis Part 2](./docs/thesisPart2.pdf)
+- [Thesis Poster](./docs/poster.pdf)
 
-![Thesis Poster](poster.jpg)
+![Thesis Poster](./docs/poster.jpg)
 
 ## Description
 
